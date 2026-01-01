@@ -305,13 +305,29 @@ let ROLE = "";
 
 /* ================= LOGIN ================= */
 function login(){
-    const u = username.value;
-    const p = password.value;
+    const u = username.value.trim();
+    const p = password.value.trim();
 
     if(u === "Ranap" && p === "rsmp11"){
         ROLE = "USER";
-        loginSuccess();
-    }else if(u === "201708073" && p === "Papamama00"){
+        loginWrapper.style.display = "none";
+        userApp.classList.remove("hidden");
+        loadData();
+        loadChat();
+        return;
+    }
+
+    if(u === "201708073" && p === "Papamama00"){
+        ROLE = "ADMIN";
+        loginWrapper.style.display = "none";
+        adminApp.classList.remove("hidden");
+        loadData();
+        loadChat();
+        return;
+    }
+
+    loginMsg.innerText = "Username atau Password salah";
+}else if(u === "201708073" && p === "Papamama00"){
         ROLE = "ADMIN";
         loginSuccess();
     }else{
@@ -320,17 +336,26 @@ function login(){
 }
 
 function loginSuccess(){
-    loginWrapper.classList.add("hidden");
-    if(ROLE === "USER"){
-        userApp.classList.remove("hidden");
-        document.getElementById('welcomeUser').innerText = 'Selamat Datang User';
-    }
-    if(ROLE === "ADMIN"){
-        adminApp.classList.remove("hidden");
-        document.getElementById('welcomeAdmin').innerText = 'Selamat Datang Admin';
-    }
+    // sembunyikan login total
+    loginWrapper.style.display = "none";
+
+    // tampilkan app sesuai role
+    if(ROLE === "USER") userApp.classList.remove("hidden");
+    if(ROLE === "ADMIN") adminApp.classList.remove("hidden");
+
+    // simpan session (enterprise)
+    sessionStorage.setItem("RE_ROLE", ROLE);
+
+    // load data realtime
     loadData();
     loadChat();
+
+    // auto logout 30 menit (enterprise security)
+    setTimeout(()=>{
+        alert("Session berakhir, silakan login kembali");
+        logout();
+    }, 30 * 60 * 1000);
+}
 }
 
 function logout(){location.reload();}
@@ -426,6 +451,23 @@ fetch(DB_URL+"/chat.json").then(r=>r.json()).then(d=>{
 });
 setTimeout(loadChat,2000);
 }
+
+/* ================= ENTER LOGIN SUPPORT ================= */
+document.addEventListener("keydown", function(e){
+    if(e.key === "Enter" && loginWrapper.style.display !== "none"){
+        login();
+    }
+});
+
+/* ================= AUTO SESSION LOAD ================= */
+window.onload = function(){
+    const savedRole = sessionStorage.getItem("RE_ROLE");
+    if(savedRole){
+        ROLE = savedRole;
+        loginSuccess();
+    }
+};
+
 </script>
 </body>
 </html>
