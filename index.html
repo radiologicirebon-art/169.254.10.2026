@@ -205,7 +205,7 @@ footer{
     <h2>Login Sistem Re-Expertise Radiologi</h2>
     <input id="username" placeholder="Username">
     <input id="password" type="password" placeholder="Password">
-    <button onclick="login()">LOGIN</button>
+    <button type="button" id="btnLogin">LOGIN</button>
     <div id="loginMsg"></div>
 </div>
 </div>
@@ -305,9 +305,10 @@ let ROLE = "";
 
 /* ================= LOGIN ================= */
 // expose login globally (ENTERPRISE FIX)
-window.login = function login(){
-    const u = username.value.trim();
-    const p = password.value.trim();
+// ================= LOGIN FUNCTION (FINAL FIX) =================
+function login(){
+    const u = document.getElementById('username').value;
+    const p = document.getElementById('password').value;
 
     if(u === "Ranap" && p === "rsmp11"){
         ROLE = "USER";
@@ -321,18 +322,23 @@ window.login = function login(){
         return;
     }
 
-    // jika tidak cocok
-    
-        loginMsg.innerText = "Username atau Password salah";
-    }
+    document.getElementById('loginMsg').innerText = "Username atau Password salah";
+}
+
+// bind button & enter key safely
+setTimeout(()=>{
+    const btn=document.getElementById('btnLogin');
+    if(btn) btn.onclick=login;
+    document.addEventListener('keydown',e=>{if(e.key==='Enter')login();});
+},0)
 }
 
 function loginSuccess(){
     // sembunyikan login total
     loginWrapper.style.display = "none";
 
-    // tampilkan aloginMsg.innerText = "Username atau Password salah";
-    List.remove("hidden");
+    // tampilkan app sesuai role
+    if(ROLE === "USER") userApp.classList.remove("hidden");
     if(ROLE === "ADMIN") adminApp.classList.remove("hidden");
 
     // simpan session (enterprise)
