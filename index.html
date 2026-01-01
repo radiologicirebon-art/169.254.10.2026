@@ -1,123 +1,106 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aplikasi Radiologi</title>
+<style>
+.hidden{display:none;}
+body{font-family:Arial, sans-serif; padding:20px;}
+.menu button{margin:5px;}
+.tool{border:1px solid #ddd; padding:20px; margin-top:10px;}
+</style>
+</head>
+<body>
+
+<!-- LOGIN BOX -->
+<div id="loginBox">
+  <h3>Login Aplikasi</h3>
+  <input id="username" placeholder="Username"><br><br>
+  <input id="password" placeholder="Password" type="password"><br><br>
+  <button onclick="login()">Login</button>
+</div>
+
+<!-- DASHBOARD USER -->
+<div id="userApp" class="hidden">
+  <h2>Dashboard USER</h2>
+  <div class="menu">
+    <button onclick="openTool('tool1')">Tool 1</button>
+    <button onclick="openTool('tool2')">Tool 2</button>
+  </div>
+  <div id="tool1" class="tool hidden">Halaman Tool User 1</div>
+  <div id="tool2" class="tool hidden">Halaman Tool User 2</div>
+  <button onclick="logout()">Logout</button>
+</div>
+
+<!-- DASHBOARD ADMIN -->
+<div id="adminApp" class="hidden">
+  <h2>Dashboard ADMIN</h2>
+  <div class="menu">
+    <button onclick="openTool('admtool1')">Admin Tool 1</button>
+    <button onclick="openTool('admtool2')">Admin Tool 2</button>
+  </div>
+  <div id="admtool1" class="tool hidden">Halaman Admin Tool 1</div>
+  <div id="admtool2" class="tool hidden">Halaman Admin Tool 2</div>
+  <button onclick="logout()">Logout</button>
+</div>
+
+
 <script>
-/* =========================================
-   CONFIG
-========================================= */
-const DB_URL = "https://develop-re-expertise2026-default-rtdb.asia-southeast1.firebasedatabase.app";
-let ROLE = sessionStorage.getItem("role"); // ikuti session login
+let role = "";
 
-/* =========================================
-   NAVIGASI TOOLS
-========================================= */
-function openTool(n){
-  ["tool1","tool2","tool3"].forEach(id => document.getElementById(id).classList.add("hidden"));
-  document.getElementById("tool"+n).classList.remove("hidden");
-}
-
-/* =========================================
-   TOOL 1 : INPUT PERMOHONAN
-========================================= */
-function submitPermohonan(){
-  if(!tNama.value || !tRM.value) return alert("⚠️ Lengkapi data terlebih dahulu");
-
-  const data={
-    nama:tNama.value,
-    rm:tRM.value,
-    ranap:tRanap.value,
-    permohonan:tPermohonan.value,
-    status:"BARU",
-    created:Date.now()
-  };
-
-  fetch(DB_URL+"/permohonan.json",{
-    method:"POST",
-    body:JSON.stringify(data)
-  }).then(()=>{
-    tNama.value=tRM.value=tRanap.value=tPermohonan.value="";
-    alert("📩 Permohonan tersimpan!");
-  });
-}
-
-/* =========================================
-   TOOL 2 : MONITORING TABLE
-========================================= */
-function loadPermohonan(){
-fetch(DB_URL+"/permohonan.json")
-.then(r=>r.json())
-.then(d=>{
-  let html="",no=1;
-  for(let k in d){
-    const x=d[k];
-    html+=`
-    <tr>
-      <td>${no++}</td>
-      <td>${x.nama}</td>
-      <td>${x.rm}</td>
-      <td>${x.ranap}</td>
-      <td>${x.status}</td>
-      <td>${x.proses?new Date(x.proses).toLocaleTimeString():"-"}</td>
-      <td>${x.selesai?new Date(x.selesai).toLocaleTimeString():"-"}</td>
-      <td>
-      ${
-        ROLE==="ADMIN"
-        ? `<button onclick="setStat('${k}','DIPROSES')">Proses</button>
-           <button onclick="setStat('${k}','SELESAI')">Selesai</button>`
-        : "-"
-      }
-      </td>
-    </tr>`;
-  }
-  dataTable.innerHTML = html;
-});
-setTimeout(loadPermohonan,3000);
-}
-
-function setStat(id,s){
-  const o={status:s};
-  if(s==="DIPROSES") o.proses = Date.now();
-  if(s==="SELESAI") o.selesai = Date.now();
+// 👉 LOGIN
+function login(){
+  const user = document.getElementById("username").value;
+  const pass = document.getElementById("password").value;
   
-  fetch(DB_URL+"/permohonan/"+id+".json",{
-    method:"PATCH",
-    body:JSON.stringify(o)
-  });
+  if(user === "admin" && pass === "admin"){ role = "ADMIN"; loginOk(); }
+  else if(user === "user" && pass === "user"){ role = "USER"; loginOk(); }
+  else{ return alert("❌ Username / Password salah"); }
 }
 
-/* =========================================
-   TOOL 3 : LIVE CHAT
-========================================= */
-function sendChatMsg(){
-  if(!chatInput.value) return;
-  fetch(DB_URL+"/chat.json",{
-    method:"POST",
-    body:JSON.stringify({
-      who:ROLE,
-      msg:chatInput.value,
-      time:Date.now()
-    })
-  });
-  chatInput.value="";
+// 👉 LOGIN SUKSES
+function loginOk(){
+  document.getElementById("loginBox")?.classList.add("hidden");
+
+  if(role === "USER") document.getElementById("userApp")?.classList.remove("hidden");
+  if(role === "ADMIN") document.getElementById("adminApp")?.classList.remove("hidden");
+
+  localStorage.setItem("loginStatus", role);
+  popupLogin();
 }
 
-function loadChat(){
-fetch(DB_URL+"/chat.json")
-.then(r=>r.json())
-.then(d=>{
-  let h="";
-  for(let k in d){
-    const x=d[k];
-    h+=`<div><b>${x.who}:</b> ${x.msg}</div>`;
+// 👉 NOTIFIKASI LOGIN
+function popupLogin(){
+  alert("✅ Login berhasil! Selamat datang.");
+}
+
+// 👉 SIMPAN SESI (AUTO LOGIN)
+window.onload = () => {
+  const status = localStorage.getItem("loginStatus");
+  if(status){
+    document.getElementById("loginBox")?.classList.add("hidden");
+    document.getElementById(status === "USER" ? "userApp" : "adminApp")?.classList.remove("hidden");
   }
-  chatBox.innerHTML=h;
-});
-setTimeout(loadChat,2000);
+};
+
+// 👉 BUKA MENU (ANTI ERROR)
+function openTool(target) {
+  document.querySelectorAll('.tool').forEach(tool => {
+    if(tool?.classList) tool.classList.add('hidden');
+  });
+
+  const selectedTool = document.getElementById(target);
+  if(selectedTool?.classList) selectedTool.classList.remove('hidden');
+  else console.warn("⚠ ID menu tidak ditemukan:", target);
 }
 
-/* =========================================
-   INIT AUTO JALAN
-========================================= */
-window.addEventListener("load",()=>{
-  openTool(1);     // default buka tool pertama
-  loadPermohonan(); // realtime data
-  loadChat();       // realtime chat
-});
+// 👉 LOGOUT
+function logout(){
+  localStorage.removeItem("loginStatus");
+  location.reload();
+}
 </script>
+
+</body>
+</html>
