@@ -311,27 +311,18 @@ window.login = function login(){
 
     if(u === "Ranap" && p === "rsmp11"){
         ROLE = "USER";
-        loginWrapper.style.display = "none";
-        userApp.classList.remove("hidden");
-        loadData();
-        loadChat();
+        loginSuccess();
         return;
     }
 
     if(u === "201708073" && p === "Papamama00"){
         ROLE = "ADMIN";
-        loginWrapper.style.display = "none";
-        adminApp.classList.remove("hidden");
-        loadData();
-        loadChat();
+        loginSuccess();
         return;
     }
 
-    loginMsg.innerText = "Username atau Password salah";
-}else if(u === "201708073" && p === "Papamama00"){
-        ROLE = "ADMIN";
-        loginSuccess();
-    }else{
+    // jika tidak cocok
+    
         loginMsg.innerText = "Username atau Password salah";
     }
 }
@@ -340,8 +331,8 @@ function loginSuccess(){
     // sembunyikan login total
     loginWrapper.style.display = "none";
 
-    // tampilkan app sesuai role
-    if(ROLE === "USER") userApp.classList.remove("hidden");
+    // tampilkan aloginMsg.innerText = "Username atau Password salah";
+    List.remove("hidden");
     if(ROLE === "ADMIN") adminApp.classList.remove("hidden");
 
     // simpan session (enterprise)
