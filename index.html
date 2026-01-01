@@ -202,7 +202,7 @@ footer{
 ================================================================================== -->
 <div id="loginWrapper">
 <div id="loginBox">
-    <h2>Login Sistem</h2>
+    <h2>Login Sistem Re-Expertise Radiologi</h2>
     <input id="username" placeholder="Username">
     <input id="password" type="password" placeholder="Password">
     <button onclick="login()">LOGIN</button>
@@ -215,7 +215,7 @@ footer{
 ================================================================================== -->
 <div id="userApp" class="hidden">
 <header>
-    <h1>Instalasi Radiologi RS Mitra Plumbon Cirebon</h1>
+    <h1 id="welcomeUser">Selamat Datang User</h1>
     <button onclick="logout()">Logout</button>
 </header>
 
@@ -261,7 +261,7 @@ footer{
 ================================================================================== -->
 <div id="adminApp" class="hidden">
 <header>
-    <h1>Dashboard Admin Radiologi</h1>
+    <h1 id="welcomeAdmin">Selamat Datang Admin</h1>
     <button onclick="logout()">Logout</button>
 </header>
 
@@ -321,8 +321,14 @@ function login(){
 
 function loginSuccess(){
     loginWrapper.classList.add("hidden");
-    if(ROLE === "USER") userApp.classList.remove("hidden");
-    if(ROLE === "ADMIN") adminApp.classList.remove("hidden");
+    if(ROLE === "USER"){
+        userApp.classList.remove("hidden");
+        document.getElementById('welcomeUser').innerText = 'Selamat Datang User';
+    }
+    if(ROLE === "ADMIN"){
+        adminApp.classList.remove("hidden");
+        document.getElementById('welcomeAdmin').innerText = 'Selamat Datang Admin';
+    }
     loadData();
     loadChat();
 }
