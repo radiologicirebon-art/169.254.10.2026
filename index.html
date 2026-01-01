@@ -69,17 +69,17 @@
 </div>
 
 <script>
-/* ========================================= CONFIG */
-const DB_URL="https://yourfirebase.firebaseio.com";
+/* ========================================= CONFIG (SUDAH FIX) */
+const DB_URL="https://develop-re-expertise2026-default-rtdb.asia-southeast1.firebasedatabase.app";
 let ROLE="USER";
 
 /* ========================================= LOGIN */
 function login(){
-  const u=username.value, p=password.value;
+  const u=username.value,p=password.value;
   if(!u||!p) return alert("Lengkapi username & password");
 
   ROLE = (u==="admin" && p==="admin") ? "ADMIN" : "USER";
-  popupLogin();
+  alert("✅ Login berhasil! Selamat datang.");
   localStorage.setItem("loginStatus",ROLE);
   loginOk();
 }
@@ -89,9 +89,8 @@ function loginOk(){
   app.classList.remove("hidden");
   openTool('tool1');
 }
-function popupLogin(){alert("✅ Login berhasil! Selamat datang.");}
 
-/* Auto login after refresh */
+/* Auto login setelah refresh */
 window.onload=()=>{
   const status=localStorage.getItem("loginStatus");
   if(status){
@@ -103,41 +102,62 @@ window.onload=()=>{
 };
 function logout(){localStorage.clear();location.reload();}
 
-/* ========================================= NAVIGASI FIX TANPA ERROR */
+/* ========================================= NAV TANPA ERROR */
 function openTool(id){
   document.querySelectorAll('.tool').forEach(el=>el.classList.add("hidden"));
   const target=document.getElementById(id);
   if(target) target.classList.remove("hidden");
 }
 
-/* ========================================= TOOL 1 */
+/* ========================================= FORM PERMOHONAN */
 function submitPermohonan(){
   if(!tNama.value||!tRM.value) return alert("Lengkapi data pasien");
   const data={nama:tNama.value,rm:tRM.value,ranap:tRanap.value,permohonan:tPermohonan.value,status:"BARU",created:Date.now()};
   fetch(DB_URL+"/permohonan.json",{method:"POST",body:JSON.stringify(data)})
-  .then(()=>{tNama.value=tRM.value=tRanap.value=tPermohonan.value="";alert("Tersimpan!");});
+  .then(()=>{
+    tNama.value=tRM.value=tRanap.value=tPermohonan.value="";
+    alert("📌 Permohonan tersimpan!");
+  });
 }
 
-/* ========================================= TOOL 2 */
+/* ========================================= MONITORING (REALTIME 3 DETIK) */
 function loadPermohonan(){
 fetch(DB_URL+"/permohonan.json").then(r=>r.json()).then(d=>{
-let html="",no=1;for(let k in d){const x=d[k];
-html+=`<tr><td>${no++}</td><td>${x.nama}</td><td>${x.rm}</td><td>${x.ranap}</td><td>${x.status}</td><td>${x.proses?new Date(x.proses).toLocaleTimeString():"-"}</td><td>${x.selesai?new Date(x.selesai).toLocaleTimeString():"-"}</td><td>${ROLE==="ADMIN"?`<button onclick="setStat('${k}','DIPROSES')">Proses</button> <button onclick="setStat('${k}','SELESAI')">Selesai</button>`:"-"}</td></tr>`;}
+let html="",no=1;if(!d)return;
+for(let k in d){const x=d[k];
+html+=`<tr>
+<td>${no++}</td><td>${x.nama}</td><td>${x.rm}</td><td>${x.ranap}</td><td>${x.status}</td>
+<td>${x.proses?new Date(x.proses).toLocaleTimeString():"-"}</td>
+<td>${x.selesai?new Date(x.selesai).toLocaleTimeString():"-"}</td>
+<td>${ROLE==="ADMIN"
+?`<button onclick="setStat('${k}','DIPROSES')">Proses</button> 
+   <button onclick="setStat('${k}','SELESAI')">Selesai</button>`
+:"-"}</td></tr>`;
+}
 dataTable.innerHTML=html;
-});setTimeout(loadPermohonan,3000);}
+});
+setTimeout(loadPermohonan,3000);}
 loadPermohonan();
 
-function setStat(id,s){const o={status:s};if(s==="DIPROSES")o.proses=Date.now();if(s==="SELESAI")o.selesai=Date.now();
-fetch(DB_URL+"/permohonan/"+id+".json",{method:"PATCH",body:JSON.stringify(o)});}
+function setStat(id,s){
+const o={status:s};
+if(s==="DIPROSES")o.proses=Date.now();
+if(s==="SELESAI")o.selesai=Date.now();
+fetch(DB_URL+"/permohonan/"+id+".json",{method:"PATCH",body:JSON.stringify(o)});
+}
 
-/* ========================================= TOOL 3 */
+/* ========================================= CHAT REALTIME */
 function sendChatMsg(){
 if(!chatInput.value) return;
 fetch(DB_URL+"/chat.json",{method:"POST",body:JSON.stringify({who:ROLE,msg:chatInput.value,time:Date.now()})});
 chatInput.value="";
 }
 function loadChat(){
-fetch(DB_URL+"/chat.json").then(r=>r.json()).then(d=>{let h="";for(let k in d){const x=d[k];h+=`<div><b>${x.who}:</b> ${x.msg}</div>`;}chatBox.innerHTML=h;});
+fetch(DB_URL+"/chat.json").then(r=>r.json()).then(d=>{
+let h="";if(!d)return;
+for(let k in d){const x=d[k];h+=`<div><b>${x.who}:</b> ${x.msg}</div>`;}
+chatBox.innerHTML=h;
+});
 setTimeout(loadChat,2000);}
 loadChat();
 </script>
