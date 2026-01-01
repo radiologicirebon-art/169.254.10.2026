@@ -467,5 +467,194 @@ window.onload = function(){
 };
 
 </script>
+/* ================= KONFIGURASI ================= */
+const DB_URL = "https://develop-re-expertise2026-default-rtdb.asia-southeast1.firebasedatabase.app";
+let ROLE = "";
+
+/* ================= LOGIN ================= */
+function login(){
+    const u = document.getElementById("username").value;
+    const p = document.getElementById("password").value;
+    const msg = document.getElementById("loginMsg");
+
+    msg.innerText = "";
+
+    if(u === "Ranap" && p === "rsmp11"){
+        ROLE = "USER";
+        loginSuccess();
+        return;
+    }
+
+    if(u === "201708073" && p === "Papamama00"){
+        ROLE = "ADMIN";
+        loginSuccess();
+        return;
+    }
+
+    msg.innerText = "Username atau Password salah";
+}
+
+function loginSuccess(){
+    document.getElementById("loginWrapper").classList.add("hidden");
+    if(ROLE === "USER"){
+        document.getElementById("userApp").classList.remove("hidden");
+    }
+    if(ROLE === "ADMIN"){
+        document.getElementById("adminApp").classList.remove("hidden");
+    }
+    loadData();
+    loadChat();
+}
+
+function logout(){
+    location.reload();
+}
+
+/* ================= EVENT BINDING ================= */
+document.addEventListener("DOMContentLoaded",()=>{
+    const btn = document.getElementById("btnLogin");
+    if(btn) btn.addEventListener("click",login);
+
+    document.addEventListener("keydown",e=>{
+        if(e.key==="Enter") login();
+    });
+});
+
+/* ================= USER INPUT ================= */
+function kirimPermohonan(){
+    if(!uNama.value || !uRM.value){
+        alert("Nama & No RM wajib diisi");
+        return;
+    }
+
+    const data = {
+        nama:uNama.value,
+        rm:uRM.value,
+        ranap:uRanap.value,
+        permohonan:uPermohonan.value,
+        status:"BARU",
+        created:Date.now()
+    };
+
+    fetch(DB_URL+"/permohonan.json",{
+        method:"POST",
+        body:JSON.stringify(data)
+    }).then(()=>{
+        uNama.value="";
+        uRM.value="";
+        uRanap.value="";
+        uPermohonan.value="";
+    });
+}
+
+/* ================= LOAD DATA ================= */
+function loadData(){
+fetch(DB_URL+"/permohonan.json").then(r=>r.json()).then(d=>{
+    let uT="",aT="",no=1;
+    let baru=0,proses=0,selesai=0,total=0,count=0;
+
+    for(const k in d){
+        const x=d[k];
+        if(x.status==="BARU")baru++;
+        if(x.status==="DIPROSES")proses++;
+        if(x.status==="SELESAI"){
+            selesai++;
+            if(x.proses && x.selesai){
+                total+=(x.selesai-x.proses)/60000;
+                count++;
+            }
+        }
+
+        uT+=`
+        <tr>
+            <td>${no}</td>
+            <td>${x.nama}</td>
+            <td>${x.rm}</td>
+            <td>${x.ranap}</td>
+            <td>${x.permohonan}</td>
+            <td>${x.status}</td>
+            <td>${x.proses?new Date(x.proses).toLocaleTimeString():"-"}</td>
+            <td>${x.selesai?new Date(x.selesai).toLocaleTimeString():"-"}</td>
+            <td>${x.komentar||"-"}</td>
+        </tr>`;
+
+        aT+=`
+        <tr>
+            <td>${no}</td>
+            <td>${x.nama}</td>
+            <td>${x.rm}</td>
+            <td>${x.ranap}</td>
+            <td>${x.permohonan}</td>
+            <td>${x.proses?new Date(x.proses).toLocaleTimeString():"-"}</td>
+            <td>${x.selesai?new Date(x.selesai).toLocaleTimeString():"-"}</td>
+            <td><textarea onchange="saveKomentar('${k}',this.value)">${x.komentar||""}</textarea></td>
+            <td>
+                <button onclick="setStatus('${k}','DIPROSES')">Proses</button>
+                <button onclick="setStatus('${k}','SELESAI')">Selesai</button>
+            </td>
+        </tr>`;
+        no++;
+    }
+
+    userTable.innerHTML=uT;
+    adminTable.innerHTML=aT;
+
+    uBaru.innerText=aBaru.innerText=baru;
+    uProses.innerText=aProses.innerText=proses;
+    uSelesai.innerText=aSelesai.innerText=selesai;
+
+    const avg=count?Math.round(total/count):0;
+    uAvg.innerText=aAvg.innerText=avg+" menit";
+});
+setTimeout(loadData,3000);
+}
+
+function setStatus(id,s){
+    const obj={status:s};
+    if(s==="DIPROSES") obj.proses=Date.now();
+    if(s==="SELESAI") obj.selesai=Date.now();
+
+    fetch(DB_URL+"/permohonan/"+id+".json",{
+        method:"PATCH",
+        body:JSON.stringify(obj)
+    });
+}
+
+function saveKomentar(id,val){
+    fetch(DB_URL+"/permohonan/"+id+".json",{
+        method:"PATCH",
+        body:JSON.stringify({komentar:val})
+    });
+}
+
+/* ================= CHAT ================= */
+function sendChat(who){
+    const msg = who==="USER"?userChatMsg.value:adminChatMsg.value;
+    if(!msg) return;
+
+    fetch(DB_URL+"/chat.json",{
+        method:"POST",
+        body:JSON.stringify({who,msg,time:Date.now()})
+    });
+
+    userChatMsg.value="";
+    adminChatMsg.value="";
+}
+
+function loadChat(){
+fetch(DB_URL+"/chat.json").then(r=>r.json()).then(d=>{
+    let html="";
+    for(const k in d){
+        const x=d[k];
+        html+=`
+        <div class="chat-msg">
+            <span class="${x.who==="ADMIN"?"chat-admin":"chat-user"}">
+                ${x.who}:
+            </span> ${x.msg}
+        </div>`;
+    }
+    userChat.innerHTML=adminChat.innerHTML=html;
+});
+setTimeout(loadChat,2000);
 </body>
 </html>
