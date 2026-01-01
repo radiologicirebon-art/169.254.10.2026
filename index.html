@@ -1,90 +1,215 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Dashboard Re-Expertise Radiologi</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- ======================= STYLE ======================= -->
+<style>
+*{box-sizing:border-box;font-family:Arial,Helvetica,sans-serif}
+body{margin:0;background:#f4f6f8}
+.hidden{display:none}
+
+/* LOGIN */
+#loginBox{
+  max-width:420px;margin:80px auto;background:#fff;
+  padding:30px;border-radius:10px;
+  box-shadow:0 10px 30px rgba(0,0,0,.1)
+}
+#loginBox h2{text-align:center;margin-bottom:20px}
+input,textarea,select,button{
+  width:100%;padding:10px;margin:8px 0;
+  border-radius:6px;border:1px solid #ccc
+}
+button{background:#1d899b;color:#fff;font-weight:bold;cursor:pointer}
+button:hover{opacity:.9}
+
+/* HEADER */
+header{
+  background:#1d899b;color:#fff;padding:15px;
+  display:flex;justify-content:space-between;align-items:center
+}
+
+/* DASHBOARD */
+.dashboard{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+  gap:15px;margin:20px
+}
+.card{
+  background:#fff;padding:20px;border-radius:10px;
+  box-shadow:0 5px 15px rgba(0,0,0,.08)
+}
+.card h3{margin:0;font-size:14px;color:#666}
+.card span{font-size:32px;font-weight:bold}
+
+/* CONTENT */
+.container{margin:20px}
+table{width:100%;border-collapse:collapse;background:#fff}
+th,td{border:1px solid #ddd;padding:8px;font-size:13px}
+th{background:#1d899b;color:#fff}
+textarea{resize:vertical}
+
+/* CHAT */
+.chat-box{
+  background:#fff;border-radius:10px;padding:10px;
+  height:300px;overflow-y:auto;margin-bottom:10px
+}
+.chat-msg{margin:5px 0}
+.chat-user{font-weight:bold;color:#1d899b}
+.chat-admin{font-weight:bold;color:#c0392b}
+
+footer{text-align:center;padding:15px;color:#777;font-size:12px}
+</style>
+</head>
+
+<body>
+
+<!-- ======================= LOGIN ======================= -->
+<div id="loginBox">
+  <h2>Login Sistem</h2>
+  <input id="username" placeholder="Username">
+  <input id="password" type="password" placeholder="Password">
+  <button onclick="login()">LOGIN</button>
+  <p id="loginMsg" style="color:red;text-align:center"></p>
+</div>
+
+<!-- ======================= USER ======================= -->
+<div id="userApp" class="hidden">
+<header>
+  <div>
+    <strong>Instalasi Radiologi</strong><br>
+    RS Mitra Plumbon Cirebon
+  </div>
+  <button onclick="logout()">Logout</button>
+</header>
+
+<div class="dashboard">
+  <div class="card"><h3>BARU</h3><span id="uBaru">0</span></div>
+  <div class="card"><h3>DIPROSES</h3><span id="uProses">0</span></div>
+  <div class="card"><h3>SELESAI</h3><span id="uSelesai">0</span></div>
+  <div class="card"><h3>Rata-rata Waktu Selesai</h3><span id="uAvg">0 mnt</span></div>
+</div>
+
+<div class="container">
+<h3>Input Permohonan Re-Expertise</h3>
+<input id="uNama" placeholder="Nama Pasien">
+<input id="uRM" placeholder="No RM">
+<input id="uRanap" placeholder="Asal Ranap (contoh: RANAP 9)">
+<textarea id="uPermohonan" placeholder="Permohonan Re Expertise"></textarea>
+<button onclick="kirimPermohonan()">Simpan</button>
+
+<h3>Data Permohonan</h3>
+<table>
+<thead>
+<tr>
+<th>No</th><th>Nama</th><th>No RM</th><th>Asal Ranap</th>
+<th>Permohonan</th><th>Status</th>
+<th>Jam Diproses</th><th>Jam Selesai</th><th>Komentar Admin</th>
+</tr>
+</thead>
+<tbody id="userTable"></tbody>
+</table>
+</div>
+
+<div class="container">
+<h3>Live Chat Admin</h3>
+<div class="chat-box" id="userChat"></div>
+<input id="userChatMsg" placeholder="Ketik pesan">
+<button onclick="sendChat('USER')">Kirim</button>
+</div>
+</div>
+
+<!-- ======================= ADMIN ======================= -->
+<div id="adminApp" class="hidden">
+<header>
+  <div>
+    <strong>Dashboard Admin Radiologi</strong>
+  </div>
+  <button onclick="logout()">Logout</button>
+</header>
+
+<div class="dashboard">
+  <div class="card"><h3>BARU</h3><span id="aBaru">0</span></div>
+  <div class="card"><h3>DIPROSES</h3><span id="aProses">0</span></div>
+  <div class="card"><h3>SELESAI</h3><span id="aSelesai">0</span></div>
+  <div class="card"><h3>Rata-rata Waktu</h3><span id="aAvg">0 mnt</span></div>
+</div>
+
+<div class="container">
+<h3>Data Permohonan</h3>
+<table>
+<thead>
+<tr>
+<th>No</th><th>Nama</th><th>No RM</th><th>Asal Ranap</th>
+<th>Permohonan</th>
+<th>Jam Diproses</th><th>Jam Selesai</th>
+<th>Komentar</th><th>Aksi</th>
+</tr>
+</thead>
+<tbody id="adminTable"></tbody>
+</table>
+</div>
+
+<div class="container">
+<h3>Live Chat User</h3>
+<div class="chat-box" id="adminChat"></div>
+<input id="adminChatMsg" placeholder="Balas pesan">
+<button onclick="sendChat('ADMIN')">Kirim</button>
+</div>
+</div>
+
+<footer>© 2026 Instalasi Radiologi RS Mitra Plumbon Cirebon</footer>
+
+<!-- ======================= SCRIPT ======================= -->
 <script>
 const db = "https://develop-re-expertise2026-default-rtdb.asia-southeast1.firebasedatabase.app";
 let role = "";
 
-/* ====================== SESSION AUTO LOGIN ====================== */
-window.onload = function(){
-  const savedRole = sessionStorage.getItem("role");
-  if(savedRole){
-    role = savedRole;
-    loginBox.classList.add("hidden");
-    if(role==="USER"){
-      userApp.classList.remove("hidden");
-    } else {
-      adminApp.classList.remove("hidden");
-    }
-    loadData();
-    loadChat();
-  }
-};
-
-/* ====================== LOGIN ====================== */
+/* LOGIN */
 function login(){
-  const u=username.value, p=password.value;
-  if(u==="Ranap" && p==="rsmp11"){role="USER";loginOk();}
-  else if(u==="201708073" && p==="Papamama00"){role="ADMIN";loginOk();}
-  else loginMsg.innerText="❌ Username / Password salah";
+  const u=username.value,p=password.value;
+  if(u==="Ranap"&&p==="rsmp11"){role="USER";loginOk()}
+  else if(u==="201708073"&&p==="Papamama00"){role="ADMIN";loginOk()}
+  else loginMsg.innerText="Username / Password salah";
 }
-
 function loginOk(){
-  // Simpan sesi login
-  sessionStorage.setItem("role", role);
-
-  // Pop-up sukses
-  alert("🎉 Login berhasil!\nSelamat datang di Sistem Re-Expertise Radiologi.");
-
-  // Tampilkan halaman sesuai role
   loginBox.classList.add("hidden");
-  if(role==="USER"){ userApp.classList.remove("hidden"); }
-  else{ adminApp.classList.remove("hidden"); }
-
-  loadData();
-  loadChat();
+  if(role==="USER"){userApp.classList.remove("hidden")}
+  else{adminApp.classList.remove("hidden")}
+  loadData();loadChat();
 }
+function logout(){location.reload()}
 
-/* ====================== LOGOUT ====================== */
-function logout(){
-  sessionStorage.clear();
-  location.reload();
-}
-
-/* ====================== INPUT PERMOHONAN ====================== */
+/* INPUT USER */
 function kirimPermohonan(){
   const data={
-    nama:uNama.value, rm:uRM.value, ranap:uRanap.value,
+    nama:uNama.value,rm:uRM.value,ranap:uRanap.value,
     permohonan:uPermohonan.value,
-    status:"BARU", created:Date.now()
+    status:"BARU",created:Date.now()
   }
   fetch(db+"/permohonan.json",{method:"POST",body:JSON.stringify(data)})
-  .then(()=>{
-    uNama.value=uRM.value=uRanap.value=uPermohonan.value="";
-    alert("📩 Permohonan berhasil disimpan!");
-  });
+  .then(()=>{uNama.value=uRM.value=uRanap.value=uPermohonan.value="";})
 }
 
-/* ====================== LOAD DATA ====================== */
+/* LOAD DATA */
 function loadData(){
 fetch(db+"/permohonan.json").then(r=>r.json()).then(d=>{
   let uT="",aT="",no=1;
   let baru=0,proses=0,selesai=0,totalWaktu=0,jmlSelesai=0;
-
   for(let k in d){
     let x=d[k];
     if(x.status==="BARU")baru++;
     if(x.status==="DIPROSES")proses++;
     if(x.status==="SELESAI"){selesai++;if(x.selesai&&x.proses){totalWaktu+=(x.selesai-x.proses)/60000;jmlSelesai++;}}
-
-    // Tabel User
-    uT+=`
-<tr><td>${no}</td><td>${x.nama}</td><td>${x.rm}</td><td>${x.ranap}</td>
+    uT+=`<tr>
+<td>${no}</td><td>${x.nama}</td><td>${x.rm}</td><td>${x.ranap}</td>
 <td>${x.permohonan}</td><td>${x.status}</td>
 <td>${x.proses?new Date(x.proses).toLocaleTimeString():"-"}</td>
 <td>${x.selesai?new Date(x.selesai).toLocaleTimeString():"-"}</td>
 <td>${x.komentar||"-"}</td></tr>`;
-
-    // Tabel Admin
-    aT+=`
-<tr><td>${no}</td><td>${x.nama}</td><td>${x.rm}</td><td>${x.ranap}</td>
+    aT+=`<tr>
+<td>${no}</td><td>${x.nama}</td><td>${x.rm}</td><td>${x.ranap}</td>
 <td>${x.permohonan}</td>
 <td>${x.proses?new Date(x.proses).toLocaleTimeString():"-"}</td>
 <td>${x.selesai?new Date(x.selesai).toLocaleTimeString():"-"}</td>
@@ -95,39 +220,33 @@ fetch(db+"/permohonan.json").then(r=>r.json()).then(d=>{
 </td></tr>`;
     no++;
   }
-
   userTable.innerHTML=uT;
   adminTable.innerHTML=aT;
-
   uBaru.innerText=aBaru.innerText=baru;
   uProses.innerText=aProses.innerText=proses;
   uSelesai.innerText=aSelesai.innerText=selesai;
-
   let avg=jmlSelesai?Math.round(totalWaktu/jmlSelesai):0;
   uAvg.innerText=aAvg.innerText=avg+" mnt";
 });
 setTimeout(loadData,3000);
 }
-
 function setStatus(id,s){
   let obj={status:s};
   if(s==="DIPROSES")obj.proses=Date.now();
   if(s==="SELESAI")obj.selesai=Date.now();
   fetch(db+"/permohonan/"+id+".json",{method:"PATCH",body:JSON.stringify(obj)});
 }
-
 function saveKomentar(id,v){
   fetch(db+"/permohonan/"+id+".json",{method:"PATCH",body:JSON.stringify({komentar:v})});
 }
 
-/* ====================== CHAT ====================== */
+/* CHAT */
 function sendChat(who){
   let msg=(who==="USER"?userChatMsg.value:adminChatMsg.value);
   if(!msg)return;
   fetch(db+"/chat.json",{method:"POST",body:JSON.stringify({who,msg,time:Date.now()})});
   userChatMsg.value=adminChatMsg.value="";
 }
-
 function loadChat(){
 fetch(db+"/chat.json").then(r=>r.json()).then(d=>{
   let c="";
@@ -140,3 +259,5 @@ fetch(db+"/chat.json").then(r=>r.json()).then(d=>{
 setTimeout(loadChat,2000);
 }
 </script>
+</body>
+</html>
