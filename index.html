@@ -304,7 +304,8 @@ const DB_URL = "https://develop-re-expertise2026-default-rtdb.asia-southeast1.fi
 let ROLE = "";
 
 /* ================= LOGIN ================= */
-function login(){
+// expose login globally (ENTERPRISE FIX)
+window.login = function login(){
     const u = username.value.trim();
     const p = password.value.trim();
 
