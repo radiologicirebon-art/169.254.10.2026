@@ -1,3 +1,4 @@
+<!-- === FINAL.v7.1 STABLE (FIXED) === -->
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -12,10 +13,10 @@
 body{background:#eef5ff;font-family:Segoe UI,Arial;font-size:14px}
 .card{border-radius:16px;box-shadow:0 4px 14px rgba(0,0,0,.08)}
 .hidden{display:none}
-.chat-box{max-height:160px;overflow-y:auto;background:#f8f9fa;padding:8px;border-radius:8px}
+.chat-box{max-height:140px;overflow-y:auto;background:#f8f9fa;padding:6px;border-radius:8px}
 .chat-admin{background:#dbeafe;padding:6px 10px;border-radius:12px;margin:4px 0;text-align:right}
 .chat-user{background:#dcfce7;padding:6px 10px;border-radius:12px;margin:4px 0;text-align:left}
-.chat-time{font-size:11px;color:#666}
+textarea{resize:none}
 </style>
 </head>
 
@@ -49,13 +50,11 @@ body{background:#eef5ff;font-family:Segoe UI,Arial;font-size:14px}
 
 <!-- FORM -->
 <div id="form" class="card p-4 hidden">
-<h6 class="mb-3">📝 Permohonan Re-Expertise</h6>
-
-<input id="tNama" class="form-control mb-2" placeholder="Nama Pasien">
+<h6>📝 Permohonan Re-Expertise</h6>
+<input id="tNama" class="form-control mb-2" placeholder="Nama">
 <input id="tRM" class="form-control mb-2" placeholder="No RM">
-<input id="tRanap" class="form-control mb-2" placeholder="Asal Ranap / Unit">
+<input id="tRanap" class="form-control mb-2" placeholder="Asal Ranap">
 <textarea id="tPermohonan" class="form-control mb-3" placeholder="Permintaan Re-Expertise"></textarea>
-
 <button class="btn btn-primary" onclick="submit()">Simpan</button>
 </div>
 
@@ -66,7 +65,7 @@ body{background:#eef5ff;font-family:Segoe UI,Arial;font-size:14px}
 <thead>
 <tr>
 <th>No</th><th>Nama</th><th>No RM</th><th>Ranap</th>
-<th>Status</th><th>Chat</th><th>Aksi</th>
+<th>Status</th><th>Chat</th><th>Aksi (ADMIN)</th>
 </tr>
 </thead>
 <tbody id="data"></tbody>
@@ -96,7 +95,7 @@ body{background:#eef5ff;font-family:Segoe UI,Arial;font-size:14px}
 
 <script>
 const DB="https://develop-re-expertise2026-default-rtdb.asia-southeast1.firebasedatabase.app";
-let ROLE="",isTyping=false,slaChart,waitChart,lastCount=0;
+let ROLE="",slaChart,waitChart,lastCount=0,isTyping=false;
 
 /* LOGIN */
 function login(){
@@ -106,7 +105,6 @@ else return alert("Login salah");
 localStorage.setItem("role",ROLE);
 init();
 }
-
 function init(){
 ROLE=localStorage.getItem("role");
 loginBox.classList.add("hidden");
@@ -114,10 +112,8 @@ app.classList.remove("hidden");
 openTool("monitor");
 load();
 }
-
 if(localStorage.getItem("role")) init();
 function logout(){localStorage.clear();location.reload();}
-
 function openTool(id){
 ['form','monitor','dashboard'].forEach(x=>document.getElementById(x).classList.add("hidden"));
 document.getElementById(id).classList.remove("hidden");
@@ -125,16 +121,9 @@ document.getElementById(id).classList.remove("hidden");
 
 /* SUBMIT */
 function submit(){
-if(!tNama.value||!tRM.value||!tRanap.value||!tPermohonan.value){
-alert("Semua field wajib diisi");return;
-}
 fetch(DB+"/permohonan.json",{method:"POST",body:JSON.stringify({
-nama:tNama.value,
-rm:tRM.value,
-ranap:tRanap.value,
-permohonan:tPermohonan.value,
-status:"BARU",
-created:Date.now()
+nama:tNama.value,rm:tRM.value,ranap:tRanap.value,
+permohonan:tPermohonan.value,status:"BARU",created:Date.now(),chat:[]
 })});
 tNama.value=tRM.value=tRanap.value=tPermohonan.value="";
 openTool("monitor");
@@ -142,65 +131,46 @@ openTool("monitor");
 
 /* LOAD */
 function load(){
-if(isTyping){setTimeout(load,3000);return;}
-
 fetch(DB+"/permohonan.json").then(r=>r.json()).then(d=>{
 let h="",n=1,sla=[],wait=[],count=0;
-
 for(let k in d){
-count++;
-let x=d[k];
+count++; let x=d[k];
 if(x.proses && x.selesai) sla.push((x.selesai-x.created)/60000);
 if(x.proses) wait.push((x.proses-x.created)/60000);
 
+let chatHTML=(x.chat||[]).map(c=>`
+<div class="${c.role==='ADMIN'?'chat-admin':'chat-user'}">${c.text}</div>
+`).join("");
+
 h+=`
 <tr>
-<td>${n++}</td>
-<td>${x.nama||"-"}</td>
-<td>${x.rm||"-"}</td>
-<td>${x.ranap||"-"}</td>
+<td>${n++}</td><td>${x.nama}</td><td>${x.rm}</td><td>${x.ranap}</td>
 <td><b>${x.status}</b></td>
-<td><div class="chat-box"></div></td>
-<td>${ROLE==="ADMIN"?`
+<td><div class="chat-box">${chatHTML}</div></td>
+<td>
+${ROLE==="ADMIN"?`
+<textarea class="form-control mb-1" onfocus="isTyping=true" onblur="isTyping=false" id="c${k}" placeholder="Komentar..."></textarea>
+<button class="btn btn-sm btn-primary mb-1" onclick="sendChat('${k}')">Kirim</button>
 <button class="btn btn-sm btn-warning mb-1" onclick="setStatus('${k}','DIPROSES')">Proses</button>
-<button class="btn btn-sm btn-success" onclick="setStatus('${k}','SELESAI')">Selesai</button>`:"-"}</td>
+<button class="btn btn-sm btn-success" onclick="setStatus('${k}','SELESAI')">Selesai</button>`:"-"}
+</td>
 </tr>`;
 }
-
-if(ROLE==="ADMIN" && count>lastCount){
-document.getElementById("notifSound").play();
-}
+if(ROLE==="ADMIN" && count>lastCount) notifSound.play();
 lastCount=count;
-
 data.innerHTML=h;
+if(document.getElementById("dashboard").classList.contains("hidden")==false){
 renderCharts(sla,wait);
+}
 });
 setTimeout(load,3000);
 }
 
-/* CHART */
-function renderCharts(sla,wait){
-if(!slaChart){
-slaChart=new Chart(document.getElementById("slaChart"),{
-type:'bar',
-data:{labels:sla.map((_,i)=>"Data "+(i+1)),datasets:[{data:sla}]},
-options:{plugins:{legend:{display:false}}}
-});
-}else{
-slaChart.data.datasets[0].data=sla;
-slaChart.update();
-}
-
-if(!waitChart){
-waitChart=new Chart(document.getElementById("waitChart"),{
-type:'line',
-data:{labels:wait.map((_,i)=>"Data "+(i+1)),datasets:[{data:wait,tension:.3}]},
-options:{plugins:{legend:{display:false}}}
-});
-}else{
-waitChart.data.datasets[0].data=wait;
-waitChart.update();
-}
+/* CHAT */
+function sendChat(id){
+let el=document.getElementById("c"+id);
+fetch(DB+"/permohonan/"+id+"/chat.json",{method:"POST",body:JSON.stringify({role:"ADMIN",text:el.value,time:Date.now()})});
+el.value="";
 }
 
 /* STATUS */
@@ -211,8 +181,18 @@ if(s==="SELESAI")p.selesai=Date.now();
 fetch(DB+"/permohonan/"+id+".json",{method:"PATCH",body:JSON.stringify(p)});
 }
 
+/* CHART */
+function renderCharts(sla,wait){
+if(!slaChart){
+slaChart=new Chart(slaChart=document.getElementById("slaChart"),{type:'bar',data:{labels:sla.map((_,i)=>i+1),datasets:[{data:sla}]},options:{plugins:{legend:{display:false}}}});
+waitChart=new Chart(waitChart=document.getElementById("waitChart"),{type:'line',data:{labels:wait.map((_,i)=>i+1),datasets:[{data:wait,tension:.3}]},options:{plugins:{legend:{display:false}}}});
+}else{
+slaChart.data.datasets[0].data=sla;
+waitChart.data.datasets[0].data=wait;
+slaChart.update(); waitChart.update();
+}
+}
 load();
 </script>
-
 </body>
 </html>
