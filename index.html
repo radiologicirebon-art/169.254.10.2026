@@ -3,149 +3,262 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Radiologi RS Mitra Plumbon | Re-Expertise DEVELOP.v2.1</title>
+<title>Radiologi RS Mitra Plumbon | Re-Expertise DEVELOP.UpdateV1</title>
 
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
 <style>
-:root{--primary:#004a7c;--bg:#eef5ff}
-body{background:var(--bg);font-family:Segoe UI,Arial,sans-serif;font-size:14px}
-.card{border-radius:16px;box-shadow:0 4px 14px rgba(0,0,0,.08)}
-.header-title{font-size:1.4rem;font-weight:600;color:var(--primary)}
+:root{
+  --primary:#004a7c;
+  --bg:#eef5ff;
+}
+body{
+  background:var(--bg);
+  font-family:'Segoe UI',Arial,sans-serif;
+  font-size:14px;
+}
+.card{
+  border-radius:16px;
+  box-shadow:0 4px 14px rgba(0,0,0,.08);
+}
+.header-title{
+  font-size:1.4rem;
+  font-weight:600;
+  color:var(--primary);
+}
 .hidden{display:none}
+
+/* NAV */
 nav{display:flex;flex-wrap:wrap;gap:8px}
 nav button{flex:1;min-width:140px}
-.btn{border-radius:10px}
+
+/* TABLE */
+.table-responsive{overflow-x:auto}
+table{min-width:950px}
+
+/* CHAT */
+#chatBox{
+  height:220px;
+  background:#fff;
+  border-radius:10px;
+  border:1px solid #ddd;
+  padding:10px;
+  overflow:auto;
+}
+
+/* BUTTON */
+.btn{border-radius:10px;padding:10px 14px}
+
+/* MOBILE */
+@media(max-width:576px){
+  body{padding:10px}
+  .header-title{font-size:1.2rem}
+  nav button{flex:100%}
+}
+
+/* DESKTOP */
+@media(min-width:992px){
+  #app{max-width:1100px;margin:auto}
+}
 </style>
 </head>
 
 <body class="p-3">
 
-<!-- LOGIN -->
-<div id="loginBox" class="card p-4 mx-auto mt-5" style="max-width:380px">
+<!-- ================== LOGIN ================== -->
+<div id="loginBox" class="card p-4 mx-auto mt-5" style="max-width:380px;">
   <div class="header-title text-center mb-3">Login Radiologi</div>
   <input id="username" class="form-control mb-2" placeholder="Username">
   <input id="password" type="password" class="form-control mb-3" placeholder="Password">
   <button class="btn btn-primary w-100" onclick="login()">Login</button>
 </div>
 
-<!-- APP -->
+<!-- ================== APP ================== -->
 <div id="app" class="hidden">
 
-<div class="card p-4 mb-3">
-  <h3 class="header-title">Re-Expertise Radiologi</h3>
-  <small>RS Mitra Plumbon • <b>DEVELOP.v2.1</b></small>
-</div>
+  <div class="card p-4 mb-3">
+    <h3 class="header-title">Re-Expertise Radiologi</h3>
+    <small>RS Mitra Plumbon • <b>DEVELOP.UpdateV1</b></small>
+  </div>
 
-<nav class="mb-3">
-  <button class="btn btn-outline-primary" onclick="openTool('form')">📝 Permohonan</button>
-  <button class="btn btn-outline-primary" onclick="openTool('monitor')">📋 Monitoring</button>
-  <button class="btn btn-danger ms-auto" onclick="logout()">Logout</button>
-</nav>
+  <!-- NAV -->
+  <nav class="mb-3">
+    <button class="btn btn-outline-primary" onclick="openTool('tool1')">📝 Permohonan</button>
+    <button class="btn btn-outline-primary" onclick="openTool('tool2')">📋 Monitoring</button>
+    <button class="btn btn-outline-primary" onclick="openTool('tool3')">💬 Chat</button>
+    <button class="btn btn-danger ms-auto" onclick="logout()">Logout</button>
+  </nav>
 
-<!-- FORM -->
-<div id="form" class="card p-4">
-  <h5>📝 Pengajuan Re-Expertise</h5>
-  <input id="tNama" class="form-control mb-2" placeholder="Nama Pasien">
-  <input id="tRM" class="form-control mb-2" placeholder="No RM">
-  <input id="tRanap" class="form-control mb-2" placeholder="Unit / Ruangan">
-  <textarea id="tPermohonan" class="form-control mb-3" placeholder="Permohonan"></textarea>
-  <button class="btn btn-primary" onclick="submit()">Simpan</button>
-</div>
+  <!-- ================== TOOL 1 ================== -->
+  <div id="tool1" class="tool card p-4">
+    <h5>📝 Form Pengajuan Re-Expertise</h5>
+    <input id="tNama" class="form-control mb-2" placeholder="Nama Pasien">
+    <input id="tRM" class="form-control mb-2" placeholder="No Rekam Medis">
+    <input id="tRanap" class="form-control mb-2" placeholder="Unit / Ruangan">
+    <textarea id="tPermohonan" class="form-control mb-3" placeholder="Permohonan"></textarea>
+    <button class="btn btn-primary" onclick="submitPermohonan()">Simpan Permohonan</button>
+  </div>
 
-<!-- MONITOR -->
-<div id="monitor" class="card p-4 hidden">
-<h5>📋 Monitoring Re-Expertise</h5>
-<div class="table-responsive mt-3">
-<table class="table table-bordered">
-<thead>
-<tr>
-<th>#</th><th>Nama</th><th>RM</th><th>Unit</th>
-<th>Status</th><th>Komentar</th><th>Aksi (ADMIN)</th>
-</tr>
-</thead>
-<tbody id="data"></tbody>
-</table>
-</div>
-</div>
+  <!-- ================== TOOL 2 ================== -->
+  <div id="tool2" class="tool hidden card p-4">
+    <h5>📋 Monitoring Permohonan</h5>
+    <div class="table-responsive mt-3">
+      <table class="table table-bordered table-striped">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Nama</th>
+            <th>RM</th>
+            <th>Ranap</th>
+            <th>Status</th>
+            <th>Komentar</th>
+            <th>Proses</th>
+            <th>Selesai</th>
+            <th>Aksi</th>
+          </tr>
+        </thead>
+        <tbody id="dataTable"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ================== TOOL 3 ================== -->
+  <div id="tool3" class="tool hidden card p-4">
+    <h5>💬 Chat Realtime</h5>
+    <div id="chatBox"></div>
+    <input id="chatInput" class="form-control mt-2 mb-2" placeholder="Ketik pesan...">
+    <button class="btn btn-primary" onclick="sendChatMsg()">Kirim</button>
+  </div>
 
 </div>
 
 <script>
-const DB="https://develop-re-expertise2026-default-rtdb.asia-southeast1.firebasedatabase.app";
+/* ================= CONFIG ================= */
+const DB_URL="https://develop-re-expertise2026-default-rtdb.asia-southeast1.firebasedatabase.app";
 let ROLE="USER";
 
-/* LOGIN */
+/* ================= LOGIN ================= */
 function login(){
-  if(!username.value||!password.value)return alert("Lengkapi login");
-  ROLE=(username.value==="admin"&&password.value==="admin")?"ADMIN":"USER";
-  localStorage.setItem("role",ROLE);
+  if(!username.value||!password.value) return alert("Lengkapi data login");
+  ROLE=(username.value==="admin" && password.value==="admin") ? "ADMIN" : "USER";
+  localStorage.setItem("loginStatus",ROLE);
   loginBox.classList.add("hidden");
   app.classList.remove("hidden");
+  openTool('tool1');
 }
-if(localStorage.getItem("role")){
-  ROLE=localStorage.getItem("role");
-  loginBox.classList.add("hidden");
-  app.classList.remove("hidden");
-}
-function logout(){localStorage.clear();location.reload()}
+window.onload=()=>{
+  const s=localStorage.getItem("loginStatus");
+  if(s){ROLE=s;loginBox.classList.add("hidden");app.classList.remove("hidden");openTool('tool1');}
+};
+function logout(){localStorage.clear();location.reload();}
 
-/* NAV */
+/* ================= NAV ================= */
 function openTool(id){
-  document.querySelectorAll('#form,#monitor').forEach(x=>x.classList.add("hidden"));
+  document.querySelectorAll('.tool').forEach(t=>t.classList.add("hidden"));
   document.getElementById(id).classList.remove("hidden");
 }
 
-/* SUBMIT */
-function submit(){
-if(!tNama.value||!tRM.value)return alert("Data belum lengkap");
-fetch(DB+"/permohonan.json",{method:"POST",
-body:JSON.stringify({
-nama:tNama.value,rm:tRM.value,ranap:tRanap.value,
-permohonan:tPermohonan.value,status:"BARU",komentar:""
-})});
-tNama.value=tRM.value=tRanap.value=tPermohonan.value="";
+/* ================= FORM ================= */
+function submitPermohonan(){
+  if(!tNama.value||!tRM.value) return alert("Data belum lengkap");
+  fetch(DB_URL+"/permohonan.json",{
+    method:"POST",
+    body:JSON.stringify({
+      nama:tNama.value,
+      rm:tRM.value,
+      ranap:tRanap.value,
+      permohonan:tPermohonan.value,
+      status:"BARU",
+      komentar:"",
+      created:Date.now()
+    })
+  }).then(()=>{
+    tNama.value=tRM.value=tRanap.value=tPermohonan.value="";
+    alert("Permohonan tersimpan");
+  });
 }
 
-/* LOAD */
-function load(){
-fetch(DB+"/permohonan.json").then(r=>r.json()).then(d=>{
-let h="",n=1;if(!d)return;
+/* ================= MONITOR ================= */
+function loadPermohonan(){
+fetch(DB_URL+"/permohonan.json")
+.then(r=>r.json())
+.then(d=>{
+let h="",no=1;
+if(!d){dataTable.innerHTML="";return;}
 for(let k in d){
 let x=d[k];
 h+=`<tr>
-<td>${n++}</td>
-<td>${x.nama}</td>
-<td>${x.rm}</td>
+<td>${no++}</td>
+<td>${x.nama||"-"}</td>
+<td>${x.rm||"-"}</td>
 <td>${x.ranap||"-"}</td>
-<td><b>${x.status}</b></td>
-<td>${x.komentar||"-"}</td>
+<td><b>${x.status||"BARU"}</b></td>
+<td>${x.komentar||"<i>-</i>"}</td>
+<td>${x.proses?new Date(x.proses).toLocaleTimeString():"-"}</td>
+<td>${x.selesai?new Date(x.selesai).toLocaleTimeString():"-"}</td>
 <td>${ROLE==="ADMIN"
 ?`
-<button class="btn btn-sm btn-warning mb-1" onclick="setStatus('${k}','DIPROSES')">Proses</button>
-<button class="btn btn-sm btn-success mb-1" onclick="setStatus('${k}','SELESAI')">Selesai</button>
-<button class="btn btn-sm btn-info" onclick="beriKomentar('${k}')">Komentar</button>
+<button class="btn btn-sm btn-warning mb-1 w-100" data-id="${k}" onclick="aksiProses(this)">Proses</button>
+<button class="btn btn-sm btn-success mb-1 w-100" data-id="${k}" onclick="aksiSelesai(this)">Selesai</button>
+<button class="btn btn-sm btn-secondary w-100" data-id="${k}" onclick="aksiKomentar(this)">Komentar</button>
 `
-:"-"}</td>
+:"<small>-</small>"}
+</td>
 </tr>`;
 }
-data.innerHTML=h;
+dataTable.innerHTML=h;
 });
-setTimeout(load,3000);
+setTimeout(loadPermohonan,3000);
 }
-load();
+loadPermohonan();
 
-/* ACTION */
-function setStatus(id,s){
-fetch(DB+"/permohonan/"+id+".json",{method:"PATCH",
-body:JSON.stringify({status:s})});
+/* ================= AKSI ADMIN ================= */
+function aksiProses(btn){
+  const id=btn.dataset.id;
+  fetch(DB_URL+"/permohonan/"+id+".json",{
+    method:"PATCH",
+    body:JSON.stringify({status:"DIPROSES",proses:Date.now()})
+  });
 }
-function beriKomentar(id){
-let k=prompt("Tulis komentar:");
-if(!k)return;
-fetch(DB+"/permohonan/"+id+".json",{method:"PATCH",
-body:JSON.stringify({komentar:k})});
+
+function aksiSelesai(btn){
+  const id=btn.dataset.id;
+  fetch(DB_URL+"/permohonan/"+id+".json",{
+    method:"PATCH",
+    body:JSON.stringify({status:"SELESAI",selesai:Date.now()})
+  });
 }
+
+function aksiKomentar(btn){
+  const id=btn.dataset.id;
+  const k=prompt("Tulis komentar (terlihat oleh user):");
+  if(k===null) return;
+  fetch(DB_URL+"/permohonan/"+id+".json",{
+    method:"PATCH",
+    body:JSON.stringify({komentar:k})
+  });
+}
+
+/* ================= CHAT ================= */
+function sendChatMsg(){
+  if(!chatInput.value)return;
+  fetch(DB_URL+"/chat.json",{
+    method:"POST",
+    body:JSON.stringify({who:ROLE,msg:chatInput.value,time:Date.now()})
+  });
+  chatInput.value="";
+}
+function loadChat(){
+fetch(DB_URL+"/chat.json")
+.then(r=>r.json())
+.then(d=>{
+let h="";if(!d)return;
+for(let k in d){h+=`<div><b>${d[k].who}:</b> ${d[k].msg}</div>`;}
+chatBox.innerHTML=h;
+});
+setTimeout(loadChat,2000);
+}
+loadChat();
 </script>
 
 </body>
