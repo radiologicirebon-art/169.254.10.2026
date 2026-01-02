@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Radiologi RS Mitra Plumbon | Re-Expertise DEVELOP.update</title>
+<title>Radiologi RS Mitra Plumbon | Re-Expertise DEVELOP.UpdateV1</title>
 
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
@@ -34,11 +34,11 @@ nav button{flex:1;min-width:140px}
 
 /* TABLE */
 .table-responsive{overflow-x:auto}
-table{min-width:900px}
+table{min-width:950px}
 
 /* CHAT */
 #chatBox{
-  height:240px;
+  height:220px;
   background:#fff;
   border-radius:10px;
   border:1px solid #ddd;
@@ -78,7 +78,7 @@ table{min-width:900px}
 
   <div class="card p-4 mb-3">
     <h3 class="header-title">Re-Expertise Radiologi</h3>
-    <small>RS Mitra Plumbon • <b>DEVELOP.update</b></small>
+    <small>RS Mitra Plumbon • <b>DEVELOP.UpdateV1</b></small>
   </div>
 
   <!-- NAV -->
@@ -140,18 +140,15 @@ let ROLE="USER";
 /* ================= LOGIN ================= */
 function login(){
   if(!username.value||!password.value) return alert("Lengkapi data login");
-  ROLE=(username.value==="admin"&&password.value==="admin")?"ADMIN":"USER";
+  ROLE=(username.value==="admin" && password.value==="admin") ? "ADMIN" : "USER";
   localStorage.setItem("loginStatus",ROLE);
-  loginOk();
-}
-function loginOk(){
   loginBox.classList.add("hidden");
   app.classList.remove("hidden");
   openTool('tool1');
 }
 window.onload=()=>{
   const s=localStorage.getItem("loginStatus");
-  if(s){ROLE=s;loginOk();}
+  if(s){ROLE=s;loginBox.classList.add("hidden");app.classList.remove("hidden");openTool('tool1');}
 };
 function logout(){localStorage.clear();location.reload();}
 
@@ -183,8 +180,11 @@ function submitPermohonan(){
 
 /* ================= MONITOR ================= */
 function loadPermohonan(){
-fetch(DB_URL+"/permohonan.json").then(r=>r.json()).then(d=>{
-let h="",no=1;if(!d)return;
+fetch(DB_URL+"/permohonan.json")
+.then(r=>r.json())
+.then(d=>{
+let h="",no=1;
+if(!d){dataTable.innerHTML="";return;}
 for(let k in d){
 let x=d[k];
 h+=`<tr>
@@ -198,14 +198,9 @@ h+=`<tr>
 <td>${x.selesai?new Date(x.selesai).toLocaleTimeString():"-"}</td>
 <td>${ROLE==="ADMIN"
 ?`
-<button class="btn btn-sm btn-warning mb-1 w-100"
- onclick="setStatus('${k}','DIPROSES')">Proses</button>
-
-<button class="btn btn-sm btn-success mb-1 w-100"
- onclick="setStatus('${k}','SELESAI')">Selesai</button>
-
-<button class="btn btn-sm btn-secondary w-100"
- onclick="isiKomentar('${k}','${x.komentar||""}')">Komentar</button>
+<button class="btn btn-sm btn-warning mb-1 w-100" data-id="${k}" onclick="aksiProses(this)">Proses</button>
+<button class="btn btn-sm btn-success mb-1 w-100" data-id="${k}" onclick="aksiSelesai(this)">Selesai</button>
+<button class="btn btn-sm btn-secondary w-100" data-id="${k}" onclick="aksiKomentar(this)">Komentar</button>
 `
 :"<small>-</small>"}
 </td>
@@ -217,28 +212,46 @@ setTimeout(loadPermohonan,3000);
 }
 loadPermohonan();
 
-function setStatus(id,status){
-let o={status:status};
-if(status==="DIPROSES") o.proses=Date.now();
-if(status==="SELESAI") o.selesai=Date.now();
-fetch(DB_URL+"/permohonan/"+id+".json",{method:"PATCH",body:JSON.stringify(o)});
+/* ================= AKSI ADMIN ================= */
+function aksiProses(btn){
+  const id=btn.dataset.id;
+  fetch(DB_URL+"/permohonan/"+id+".json",{
+    method:"PATCH",
+    body:JSON.stringify({status:"DIPROSES",proses:Date.now()})
+  });
 }
 
-function isiKomentar(id,old){
-let k=prompt("Tulis komentar (terlihat oleh user):",old||"");
-if(k===null) return;
-fetch(DB_URL+"/permohonan/"+id+".json",{method:"PATCH",body:JSON.stringify({komentar:k})});
+function aksiSelesai(btn){
+  const id=btn.dataset.id;
+  fetch(DB_URL+"/permohonan/"+id+".json",{
+    method:"PATCH",
+    body:JSON.stringify({status:"SELESAI",selesai:Date.now()})
+  });
+}
+
+function aksiKomentar(btn){
+  const id=btn.dataset.id;
+  const k=prompt("Tulis komentar (terlihat oleh user):");
+  if(k===null) return;
+  fetch(DB_URL+"/permohonan/"+id+".json",{
+    method:"PATCH",
+    body:JSON.stringify({komentar:k})
+  });
 }
 
 /* ================= CHAT ================= */
 function sendChatMsg(){
-if(!chatInput.value)return;
-fetch(DB_URL+"/chat.json",{method:"POST",
-body:JSON.stringify({who:ROLE,msg:chatInput.value,time:Date.now()})});
-chatInput.value="";
+  if(!chatInput.value)return;
+  fetch(DB_URL+"/chat.json",{
+    method:"POST",
+    body:JSON.stringify({who:ROLE,msg:chatInput.value,time:Date.now()})
+  });
+  chatInput.value="";
 }
 function loadChat(){
-fetch(DB_URL+"/chat.json").then(r=>r.json()).then(d=>{
+fetch(DB_URL+"/chat.json")
+.then(r=>r.json())
+.then(d=>{
 let h="";if(!d)return;
 for(let k in d){h+=`<div><b>${d[k].who}:</b> ${d[k].msg}</div>`;}
 chatBox.innerHTML=h;
