@@ -1,10 +1,9 @@
-<!-- === FINAL.v7.1 STABLE (FIXED) === -->
 <!DOCTYPE html>
 <html lang="id">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Radiologi | Re-Expertise Final.v7.1 STABLE</title>
+<title>Radiologi | Re-Expertise Final.v7.2 STABLE</title>
 
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -13,10 +12,10 @@
 body{background:#eef5ff;font-family:Segoe UI,Arial;font-size:14px}
 .card{border-radius:16px;box-shadow:0 4px 14px rgba(0,0,0,.08)}
 .hidden{display:none}
-.chat-box{max-height:140px;overflow-y:auto;background:#f8f9fa;padding:6px;border-radius:8px}
+.chat-box{max-height:160px;overflow-y:auto;background:#f8f9fa;padding:8px;border-radius:8px}
 .chat-admin{background:#dbeafe;padding:6px 10px;border-radius:12px;margin:4px 0;text-align:right}
 .chat-user{background:#dcfce7;padding:6px 10px;border-radius:12px;margin:4px 0;text-align:left}
-textarea{resize:none}
+.chat-time{font-size:11px;color:#666}
 </style>
 </head>
 
@@ -38,7 +37,7 @@ textarea{resize:none}
 
 <div class="card p-3 mb-3">
 <b>Re-Expertise Radiologi</b><br>
-<small>RS Mitra Plumbon • <b>Final.v7.1 STABLE</b></small>
+<small>RS Mitra Plumbon • <b>Final.v7.2 STABLE</b></small>
 </div>
 
 <nav class="mb-3 d-flex gap-2">
@@ -50,10 +49,10 @@ textarea{resize:none}
 
 <!-- FORM -->
 <div id="form" class="card p-4 hidden">
-<h6>📝 Permohonan Re-Expertise</h6>
-<input id="tNama" class="form-control mb-2" placeholder="Nama">
+<h6 class="mb-3">📝 Permohonan Re-Expertise</h6>
+<input id="tNama" class="form-control mb-2" placeholder="Nama Pasien">
 <input id="tRM" class="form-control mb-2" placeholder="No RM">
-<input id="tRanap" class="form-control mb-2" placeholder="Asal Ranap">
+<input id="tRanap" class="form-control mb-2" placeholder="Asal Ranap / Unit">
 <textarea id="tPermohonan" class="form-control mb-3" placeholder="Permintaan Re-Expertise"></textarea>
 <button class="btn btn-primary" onclick="submit()">Simpan</button>
 </div>
@@ -65,7 +64,7 @@ textarea{resize:none}
 <thead>
 <tr>
 <th>No</th><th>Nama</th><th>No RM</th><th>Ranap</th>
-<th>Status</th><th>Chat</th><th>Aksi (ADMIN)</th>
+<th>Status</th><th>Chat</th><th>Aksi</th>
 </tr>
 </thead>
 <tbody id="data"></tbody>
@@ -95,16 +94,18 @@ textarea{resize:none}
 
 <script>
 const DB="https://develop-re-expertise2026-default-rtdb.asia-southeast1.firebasedatabase.app";
-let ROLE="",slaChart,waitChart,lastCount=0,isTyping=false;
+let ROLE="",isTyping=false,slaChart,waitChart;
+let lastChatCount={};
 
 /* LOGIN */
 function login(){
-if(username.value==="201708073" && password.value==="Papamama00") ROLE="ADMIN";
-else if(username.value==="USER" && password.value==="rsmp11") ROLE="USER";
+if(username.value==="201708073"&&password.value==="Papamama00")ROLE="ADMIN";
+else if(username.value==="USER"&&password.value==="rsmp11")ROLE="USER";
 else return alert("Login salah");
-localStorage.setItem("role",ROLE);
-init();
+localStorage.setItem("role",ROLE);init();
 }
+if(localStorage.getItem("role"))init();
+
 function init(){
 ROLE=localStorage.getItem("role");
 loginBox.classList.add("hidden");
@@ -112,7 +113,6 @@ app.classList.remove("hidden");
 openTool("monitor");
 load();
 }
-if(localStorage.getItem("role")) init();
 function logout(){localStorage.clear();location.reload();}
 function openTool(id){
 ['form','monitor','dashboard'].forEach(x=>document.getElementById(x).classList.add("hidden"));
@@ -121,9 +121,11 @@ document.getElementById(id).classList.remove("hidden");
 
 /* SUBMIT */
 function submit(){
+if(!tNama.value||!tRM.value||!tRanap.value||!tPermohonan.value)
+return alert("Semua field wajib diisi");
 fetch(DB+"/permohonan.json",{method:"POST",body:JSON.stringify({
 nama:tNama.value,rm:tRM.value,ranap:tRanap.value,
-permohonan:tPermohonan.value,status:"BARU",created:Date.now(),chat:[]
+permohonan:tPermohonan.value,status:"BARU",created:Date.now()
 })});
 tNama.value=tRM.value=tRanap.value=tPermohonan.value="";
 openTool("monitor");
@@ -131,46 +133,73 @@ openTool("monitor");
 
 /* LOAD */
 function load(){
-fetch(DB+"/permohonan.json").then(r=>r.json()).then(d=>{
-let h="",n=1,sla=[],wait=[],count=0;
-for(let k in d){
-count++; let x=d[k];
-if(x.proses && x.selesai) sla.push((x.selesai-x.created)/60000);
-if(x.proses) wait.push((x.proses-x.created)/60000);
+if(isTyping){setTimeout(load,3000);return;}
 
-let chatHTML=(x.chat||[]).map(c=>`
-<div class="${c.role==='ADMIN'?'chat-admin':'chat-user'}">${c.text}</div>
-`).join("");
+fetch(DB+"/permohonan.json").then(r=>r.json()).then(d=>{
+let h="",n=1,sla=[],wait=[];
+for(let k in d){
+let x=d[k];
+if(x.proses&&x.selesai)sla.push((x.selesai-x.created)/60000);
+if(x.proses)wait.push((x.proses-x.created)/60000);
+
+let chats=Object.values(x.chat||{});
+if(ROLE==="ADMIN" && chats.length>(lastChatCount[k]||0)){
+document.getElementById("notifSound").play();
+}
+lastChatCount[k]=chats.length;
+
+let chatHtml=chats.map(c=>`
+<div class="${c.role==='ADMIN'?'chat-admin':'chat-user'}">
+${c.text}<div class="chat-time">${new Date(c.time).toLocaleTimeString()}</div>
+</div>`).join("");
 
 h+=`
 <tr>
-<td>${n++}</td><td>${x.nama}</td><td>${x.rm}</td><td>${x.ranap}</td>
+<td>${n++}</td>
+<td>${x.nama}</td>
+<td>${x.rm}</td>
+<td>${x.ranap}</td>
 <td><b>${x.status}</b></td>
-<td><div class="chat-box">${chatHTML}</div></td>
 <td>
-${ROLE==="ADMIN"?`
-<textarea class="form-control mb-1" onfocus="isTyping=true" onblur="isTyping=false" id="c${k}" placeholder="Komentar..."></textarea>
-<button class="btn btn-sm btn-primary mb-1" onclick="sendChat('${k}')">Kirim</button>
-<button class="btn btn-sm btn-warning mb-1" onclick="setStatus('${k}','DIPROSES')">Proses</button>
-<button class="btn btn-sm btn-success" onclick="setStatus('${k}','SELESAI')">Selesai</button>`:"-"}
+<div class="chat-box" id="chat-${k}">${chatHtml}</div>
+<input class="form-control form-control-sm mt-1"
+placeholder="Ketik pesan..."
+onfocus="isTyping=true" onblur="isTyping=false"
+onkeydown="if(event.key==='Enter')sendChat('${k}',this)">
 </td>
+<td>${ROLE==="ADMIN"?`
+<button class="btn btn-sm btn-warning mb-1" onclick="setStatus('${k}','DIPROSES')">Proses</button>
+<button class="btn btn-sm btn-success mb-1" onclick="setStatus('${k}','SELESAI')">Selesai</button>`:"-"}</td>
 </tr>`;
 }
-if(ROLE==="ADMIN" && count>lastCount) notifSound.play();
-lastCount=count;
 data.innerHTML=h;
-if(document.getElementById("dashboard").classList.contains("hidden")==false){
+document.querySelectorAll(".chat-box").forEach(c=>c.scrollTop=c.scrollHeight);
 renderCharts(sla,wait);
-}
 });
 setTimeout(load,3000);
 }
 
 /* CHAT */
-function sendChat(id){
-let el=document.getElementById("c"+id);
-fetch(DB+"/permohonan/"+id+"/chat.json",{method:"POST",body:JSON.stringify({role:"ADMIN",text:el.value,time:Date.now()})});
+function sendChat(id,el){
+if(!el.value)return;
+fetch(DB+"/permohonan/"+id+"/chat.json",{method:"POST",
+body:JSON.stringify({text:el.value,role:ROLE,time:Date.now()})});
 el.value="";
+}
+
+/* CHART */
+function renderCharts(sla,wait){
+if(!slaChart){
+slaChart=new Chart(slaChart=document.getElementById("slaChart"),{
+type:'bar',data:{labels:sla.map((_,i)=>"Data "+(i+1)),datasets:[{data:sla}]},
+options:{plugins:{legend:{display:false}}}});
+}else{slaChart.data.datasets[0].data=sla;slaChart.update();}
+
+if(!waitChart){
+waitChart=new Chart(waitChart=document.getElementById("waitChart"),{
+type:'line',data:{labels:wait.map((_,i)=>"Data "+(i+1)),datasets:[{data:wait,tension:.3}]},
+options:{plugins:{legend:{display:false}}}});
+}else{waitChart.data.datasets[0].data=wait;waitChart.update();}
 }
 
 /* STATUS */
@@ -180,19 +209,6 @@ if(s==="DIPROSES")p.proses=Date.now();
 if(s==="SELESAI")p.selesai=Date.now();
 fetch(DB+"/permohonan/"+id+".json",{method:"PATCH",body:JSON.stringify(p)});
 }
-
-/* CHART */
-function renderCharts(sla,wait){
-if(!slaChart){
-slaChart=new Chart(slaChart=document.getElementById("slaChart"),{type:'bar',data:{labels:sla.map((_,i)=>i+1),datasets:[{data:sla}]},options:{plugins:{legend:{display:false}}}});
-waitChart=new Chart(waitChart=document.getElementById("waitChart"),{type:'line',data:{labels:wait.map((_,i)=>i+1),datasets:[{data:wait,tension:.3}]},options:{plugins:{legend:{display:false}}}});
-}else{
-slaChart.data.datasets[0].data=sla;
-waitChart.data.datasets[0].data=wait;
-slaChart.update(); waitChart.update();
-}
-}
-load();
 </script>
 </body>
 </html>
