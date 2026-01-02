@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Radiologi RS Mitra Plumbon | Re-Expertise DEVELOP</title>
+<title>Radiologi RS Mitra Plumbon | Re-Expertise DEVELOP.update</title>
 
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
@@ -12,43 +12,29 @@
   --primary:#004a7c;
   --bg:#eef5ff;
 }
-
 body{
   background:var(--bg);
   font-family:'Segoe UI',Arial,sans-serif;
   font-size:14px;
 }
-
 .card{
   border-radius:16px;
   box-shadow:0 4px 14px rgba(0,0,0,.08);
 }
-
 .header-title{
   font-size:1.4rem;
   font-weight:600;
   color:var(--primary);
 }
-
 .hidden{display:none}
 
 /* NAV */
-nav{
-  display:flex;
-  flex-wrap:wrap;
-  gap:8px;
-}
-nav button{
-  flex:1;
-  min-width:140px;
-}
-
-/* TOOL */
-.tool{animation:fade .3s ease-in-out}
+nav{display:flex;flex-wrap:wrap;gap:8px}
+nav button{flex:1;min-width:140px}
 
 /* TABLE */
 .table-responsive{overflow-x:auto}
-table{min-width:700px}
+table{min-width:900px}
 
 /* CHAT */
 #chatBox{
@@ -61,10 +47,7 @@ table{min-width:700px}
 }
 
 /* BUTTON */
-.btn{
-  border-radius:10px;
-  padding:10px 14px;
-}
+.btn{border-radius:10px;padding:10px 14px}
 
 /* MOBILE */
 @media(max-width:576px){
@@ -76,11 +59,6 @@ table{min-width:700px}
 /* DESKTOP */
 @media(min-width:992px){
   #app{max-width:1100px;margin:auto}
-}
-
-@keyframes fade{
-  from{opacity:0;transform:translateY(6px)}
-  to{opacity:1;transform:none}
 }
 </style>
 </head>
@@ -100,7 +78,7 @@ table{min-width:700px}
 
   <div class="card p-4 mb-3">
     <h3 class="header-title">Re-Expertise Radiologi</h3>
-    <small>RS Mitra Plumbon • <b>DEVELOP VERSION</b></small>
+    <small>RS Mitra Plumbon • <b>DEVELOP.update</b></small>
   </div>
 
   <!-- NAV -->
@@ -128,8 +106,15 @@ table{min-width:700px}
       <table class="table table-bordered table-striped">
         <thead>
           <tr>
-            <th>#</th><th>Nama</th><th>RM</th><th>Ranap</th>
-            <th>Status</th><th>Proses</th><th>Selesai</th><th>Aksi</th>
+            <th>#</th>
+            <th>Nama</th>
+            <th>RM</th>
+            <th>Ranap</th>
+            <th>Status</th>
+            <th>Komentar</th>
+            <th>Proses</th>
+            <th>Selesai</th>
+            <th>Aksi</th>
           </tr>
         </thead>
         <tbody id="dataTable"></tbody>
@@ -187,6 +172,7 @@ function submitPermohonan(){
       ranap:tRanap.value,
       permohonan:tPermohonan.value,
       status:"BARU",
+      komentar:"",
       created:Date.now()
     })
   }).then(()=>{
@@ -203,28 +189,45 @@ for(let k in d){
 let x=d[k];
 h+=`<tr>
 <td>${no++}</td>
-<td>${x.nama}</td>
-<td>${x.rm}</td>
-<td>${x.ranap}</td>
-<td>${x.status}</td>
+<td>${x.nama||"-"}</td>
+<td>${x.rm||"-"}</td>
+<td>${x.ranap||"-"}</td>
+<td><b>${x.status||"BARU"}</b></td>
+<td>${x.komentar||"<i>-</i>"}</td>
 <td>${x.proses?new Date(x.proses).toLocaleTimeString():"-"}</td>
 <td>${x.selesai?new Date(x.selesai).toLocaleTimeString():"-"}</td>
 <td>${ROLE==="ADMIN"
-?`<button class="btn btn-sm btn-warning mb-1" onclick="setStat('${k}','DIPROSES')">Proses</button>
-<button class="btn btn-sm btn-success" onclick="setStat('${k}','SELESAI')">Selesai</button>`
-:"-"}</td>
+?`
+<button class="btn btn-sm btn-warning mb-1 w-100"
+ onclick="setStatus('${k}','DIPROSES')">Proses</button>
+
+<button class="btn btn-sm btn-success mb-1 w-100"
+ onclick="setStatus('${k}','SELESAI')">Selesai</button>
+
+<button class="btn btn-sm btn-secondary w-100"
+ onclick="isiKomentar('${k}','${x.komentar||""}')">Komentar</button>
+`
+:"<small>-</small>"}
+</td>
 </tr>`;
 }
 dataTable.innerHTML=h;
 });
-setTimeout(loadPermohonan,3000);}
+setTimeout(loadPermohonan,3000);
+}
 loadPermohonan();
 
-function setStat(id,s){
-let o={status:s};
-if(s==="DIPROSES")o.proses=Date.now();
-if(s==="SELESAI")o.selesai=Date.now();
+function setStatus(id,status){
+let o={status:status};
+if(status==="DIPROSES") o.proses=Date.now();
+if(status==="SELESAI") o.selesai=Date.now();
 fetch(DB_URL+"/permohonan/"+id+".json",{method:"PATCH",body:JSON.stringify(o)});
+}
+
+function isiKomentar(id,old){
+let k=prompt("Tulis komentar (terlihat oleh user):",old||"");
+if(k===null) return;
+fetch(DB_URL+"/permohonan/"+id+".json",{method:"PATCH",body:JSON.stringify({komentar:k})});
 }
 
 /* ================= CHAT ================= */
@@ -240,7 +243,8 @@ let h="";if(!d)return;
 for(let k in d){h+=`<div><b>${d[k].who}:</b> ${d[k].msg}</div>`;}
 chatBox.innerHTML=h;
 });
-setTimeout(loadChat,2000);}
+setTimeout(loadChat,2000);
+}
 loadChat();
 </script>
 
