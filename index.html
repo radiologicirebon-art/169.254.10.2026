@@ -14,6 +14,7 @@ body{background:var(--bg);font-family:Segoe UI,Arial;font-size:14px}
 .hidden{display:none}
 .btn{border-radius:10px}
 .stat{color:#fff}
+#chatBox{height:220px;overflow:auto;background:#fff;border:1px solid #ddd;border-radius:10px;padding:10px}
 </style>
 </head>
 
@@ -30,17 +31,15 @@ body{background:var(--bg);font-family:Segoe UI,Arial;font-size:14px}
 <!-- APP -->
 <div id="app" class="hidden">
 
-<div class="card p-3 mb-3">
+<div class="card p-4 mb-3">
   <b>Re-Expertise Radiologi</b><br>
-  <small>
-    RS Mitra Plumbon • <b>DEVELOP.v2.4</b> • 
-    Role: <b id="roleView"></b>
-  </small>
+  <small>RS Mitra Plumbon • <b>DEVELOP.v2.4</b></small>
 </div>
 
-<nav class="mb-3 d-flex gap-2">
+<nav class="mb-3 d-flex flex-wrap gap-2">
   <button class="btn btn-outline-primary" onclick="openTool('form')">📝 Permohonan</button>
   <button class="btn btn-outline-primary" onclick="openTool('monitor')">📋 Monitoring</button>
+  <button class="btn btn-outline-primary" onclick="openTool('chat')">💬 Live Chat</button>
   <button class="btn btn-danger ms-auto" onclick="logout()">Logout</button>
 </nav>
 
@@ -59,25 +58,15 @@ body{background:var(--bg);font-family:Segoe UI,Arial;font-size:14px}
 
 <!-- DASHBOARD -->
 <div class="row mb-3">
-  <div class="col-md-3 mb-2">
-    <div class="card stat bg-primary p-3 text-center">
-      <div>BARU</div><h3 id="cntBaru">0</h3>
-    </div>
-  </div>
-  <div class="col-md-3 mb-2">
-    <div class="card stat bg-warning p-3 text-center">
-      <div>DIPROSES</div><h3 id="cntProses">0</h3>
-    </div>
-  </div>
-  <div class="col-md-3 mb-2">
-    <div class="card stat bg-success p-3 text-center">
-      <div>SELESAI</div><h3 id="cntSelesai">0</h3>
-    </div>
-  </div>
+  <div class="col-md-3 mb-2"><div class="card stat bg-primary p-3 text-center"><div>BARU</div><h3 id="cntBaru">0</h3></div></div>
+  <div class="col-md-3 mb-2"><div class="card stat bg-warning p-3 text-center"><div>DIPROSES</div><h3 id="cntProses">0</h3></div></div>
+  <div class="col-md-3 mb-2"><div class="card stat bg-success p-3 text-center"><div>SELESAI</div><h3 id="cntSelesai">0</h3></div></div>
+  <div class="col-md-3 mb-2"><div class="card bg-dark text-white p-3 text-center"><div>⏱ Rata-rata (menit)</div><h4 id="avgTime">0</h4></div></div>
 </div>
 
+<!-- TABLE -->
 <div class="card p-3">
-<table class="table table-bordered align-middle">
+<table class="table table-bordered">
 <thead>
 <tr>
 <th>No</th><th>Nama</th><th>RM</th><th>Unit</th>
@@ -87,8 +76,16 @@ body{background:var(--bg);font-family:Segoe UI,Arial;font-size:14px}
 <tbody id="data"></tbody>
 </table>
 </div>
-
 </div>
+
+<!-- CHAT -->
+<div id="chat" class="hidden card p-4">
+  <h6>💬 Live Chat</h6>
+  <div id="chatBox"></div>
+  <input id="chatInput" class="form-control mt-2" placeholder="Ketik pesan...">
+  <button class="btn btn-primary mt-2" onclick="sendChat()">Kirim</button>
+</div>
+
 </div>
 
 <script>
@@ -97,104 +94,92 @@ let ROLE="USER";
 
 /* LOGIN */
 function login(){
-  ROLE = (username.value==="admin" && password.value==="admin") ? "ADMIN" : "USER";
-  localStorage.setItem("role", ROLE);
-  initApp();
+ROLE=(username.value==="admin"&&password.value==="admin")?"ADMIN":"USER";
+localStorage.setItem("role",ROLE);
+loginBox.classList.add("hidden");
+app.classList.remove("hidden");
 }
-
-/* INIT */
-function initApp(){
-  loginBox.classList.add("hidden");
-  app.classList.remove("hidden");
-  roleView.innerText = ROLE;
-  load();
-}
-
-/* AUTO LOGIN */
 if(localStorage.getItem("role")){
-  ROLE = localStorage.getItem("role");
-  initApp();
+ROLE=localStorage.getItem("role");
+loginBox.classList.add("hidden");
+app.classList.remove("hidden");
 }
-
-function logout(){
-  localStorage.clear();
-  location.reload();
-}
+function logout(){localStorage.clear();location.reload()}
 
 /* NAV */
 function openTool(id){
-  document.querySelectorAll('#form,#monitor').forEach(x=>x.classList.add("hidden"));
-  document.getElementById(id).classList.remove("hidden");
+document.querySelectorAll('#form,#monitor,#chat').forEach(x=>x.classList.add("hidden"));
+document.getElementById(id).classList.remove("hidden");
 }
 
 /* SUBMIT */
 function submit(){
 if(!tNama.value||!tRM.value)return alert("Data belum lengkap");
-fetch(DB+"/permohonan.json",{method:"POST",
-body:JSON.stringify({
-nama:tNama.value,
-rm:tRM.value,
-ranap:tRanap.value,
-status:"BARU",
-komentar:"",
-created:Date.now()
+fetch(DB+"/permohonan.json",{method:"POST",body:JSON.stringify({
+nama:tNama.value,rm:tRM.value,ranap:tRanap.value,
+permohonan:tPermohonan.value,status:"BARU",komentar:"",created:Date.now()
 })});
-tNama.value=tRM.value=tRanap.value="";
+tNama.value=tRM.value=tRanap.value=tPermohonan.value="";
 }
 
-/* LOAD */
+/* LOAD MONITOR */
 function load(){
 fetch(DB+"/permohonan.json").then(r=>r.json()).then(d=>{
-let h="",n=1,baru=0,proses=0,selesai=0;
+let h="",n=1,baru=0,proses=0,selesai=0,total=0,cnt=0;
 if(!d)return;
-
 for(let k in d){
 let x=d[k];
 if(x.status==="BARU")baru++;
 if(x.status==="DIPROSES")proses++;
-if(x.status==="SELESAI")selesai++;
-
+if(x.status==="SELESAI"){selesai++;if(x.proses&&x.selesai){total+=(x.selesai-x.proses);cnt++;}}
 h+=`
 <tr>
-<td>${n++}</td>
-<td>${x.nama}</td>
-<td>${x.rm}</td>
-<td>${x.ranap||"-"}</td>
-<td><b>${x.status}</b></td>
-<td>${x.komentar||"-"}</td>
-<td>
-${ROLE==="ADMIN" ? `
-<button class="btn btn-sm btn-secondary" onclick="toggle('${k}')">Aksi</button>
-<div id="aksi-${k}" class="hidden mt-2">
-<button class="btn btn-sm btn-warning mb-1" onclick="setStatus('${k}','DIPROSES')">Proses</button>
+<td>${n++}</td><td>${x.nama}</td><td>${x.rm}</td><td>${x.ranap||"-"}</td>
+<td><b>${x.status}</b></td><td>${x.komentar||"-"}</td>
+<td>${ROLE==="ADMIN"
+?`<button class="btn btn-sm btn-warning mb-1" onclick="setStatus('${k}','DIPROSES')">Proses</button>
 <button class="btn btn-sm btn-success mb-1" onclick="setStatus('${k}','SELESAI')">Selesai</button>
 <input id="kom-${k}" class="form-control form-control-sm mb-1" value="${x.komentar||""}">
-<button class="btn btn-sm btn-info" onclick="saveKomentar('${k}')">Simpan</button>
-</div>` : "-"}
-</td>
+<button class="btn btn-sm btn-info" onclick="saveKomentar('${k}')">Simpan</button>`:"-"}</td>
 </tr>`;
 }
-
 data.innerHTML=h;
 cntBaru.innerText=baru;
 cntProses.innerText=proses;
 cntSelesai.innerText=selesai;
+avgTime.innerText=cnt?Math.round(total/60000/cnt):0;
 });
 setTimeout(load,3000);
 }
+load();
 
 /* ACTION */
-function toggle(id){
-document.querySelectorAll("[id^='aksi-']").forEach(x=>x.classList.add("hidden"));
-document.getElementById("aksi-"+id).classList.toggle("hidden");
-}
 function setStatus(id,s){
-fetch(DB+"/permohonan/"+id+".json",{method:"PATCH",body:JSON.stringify({status:s})});
+let o={status:s};
+if(s==="DIPROSES")o.proses=Date.now();
+if(s==="SELESAI")o.selesai=Date.now();
+fetch(DB+"/permohonan/"+id+".json",{method:"PATCH",body:JSON.stringify(o)});
 }
 function saveKomentar(id){
-fetch(DB+"/permohonan/"+id+".json",{method:"PATCH",
-body:JSON.stringify({komentar:document.getElementById("kom-"+id).value})});
+fetch(DB+"/permohonan/"+id+".json",{method:"PATCH",body:JSON.stringify({komentar:document.getElementById("kom-"+id).value})});
 }
+
+/* CHAT */
+function sendChat(){
+if(!chatInput.value)return;
+fetch(DB+"/chat.json",{method:"POST",body:JSON.stringify({role:ROLE,msg:chatInput.value,time:Date.now()})});
+chatInput.value="";
+}
+function loadChat(){
+fetch(DB+"/chat.json").then(r=>r.json()).then(d=>{
+let h="";if(!d)return;
+for(let k in d){h+=`<div><b>${d[k].role}:</b> ${d[k].msg}</div>`;}
+chatBox.innerHTML=h;
+chatBox.scrollTop=chatBox.scrollHeight;
+});
+setTimeout(loadChat,2000);
+}
+loadChat();
 </script>
 
 </body>
