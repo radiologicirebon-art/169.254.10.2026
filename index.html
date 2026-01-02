@@ -3,210 +3,234 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Radiologi RS Mitra Plumbon | Re-Expertise DEVELOP.v2.4</title>
+<title>Radiologi | Re-Expertise Final.v7.1 STABLE</title>
 
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-:root{--primary:#004a7c;--bg:#eef5ff}
-body{background:var(--bg);font-family:Segoe UI,Arial;font-size:14px}
+body{background:#eef5ff;font-family:Segoe UI,Arial;font-size:14px}
 .card{border-radius:16px;box-shadow:0 4px 14px rgba(0,0,0,.08)}
 .hidden{display:none}
-.btn{border-radius:10px}
-.stat{color:#fff}
+.chat-box{max-height:160px;overflow-y:auto;background:#f8f9fa;padding:8px;border-radius:8px}
+.chat-admin{background:#dbeafe;padding:6px 10px;border-radius:12px;margin:4px 0;text-align:right}
+.chat-user{background:#dcfce7;padding:6px 10px;border-radius:12px;margin:4px 0;text-align:left}
+.chat-time{font-size:11px;color:#666}
 </style>
 </head>
 
 <body class="p-3">
 
+<audio id="notifSound">
+<source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg">
+</audio>
+
 <!-- LOGIN -->
 <div id="loginBox" class="card p-4 mx-auto mt-5" style="max-width:380px">
-  <h5 class="text-center mb-3">Login Radiologi</h5>
-  <input id="username" class="form-control mb-2" placeholder="Username">
-  <input id="password" type="password" class="form-control mb-3" placeholder="Password">
-  <button class="btn btn-primary w-100" onclick="login()">Login</button>
+<h5 class="text-center mb-3">Login Radiologi</h5>
+<input id="username" class="form-control mb-2" placeholder="Username">
+<input id="password" type="password" class="form-control mb-3" placeholder="Password">
+<button class="btn btn-primary w-100" onclick="login()">Login</button>
 </div>
 
-<!-- APP -->
 <div id="app" class="hidden">
 
-<div class="card p-4 mb-3">
-  <b>Re-Expertise Radiologi</b><br>
-  <small>RS Mitra Plumbon • <b>DEVELOP.v2.4</b></small>
+<div class="card p-3 mb-3">
+<b>Re-Expertise Radiologi</b><br>
+<small>RS Mitra Plumbon • <b>Final.v7.1 STABLE</b></small>
 </div>
 
-<nav class="mb-3 d-flex flex-wrap gap-2">
-  <button class="btn btn-outline-primary" onclick="openTool('form')">📝 Permohonan</button>
-  <button class="btn btn-outline-primary" onclick="openTool('monitor')">📋 Monitoring</button>
-  <button class="btn btn-danger ms-auto" onclick="logout()">Logout</button>
+<nav class="mb-3 d-flex gap-2">
+<button class="btn btn-outline-primary" onclick="openTool('form')">📝 Permohonan</button>
+<button class="btn btn-outline-primary" onclick="openTool('monitor')">📋 Monitoring</button>
+<button class="btn btn-outline-primary" onclick="openTool('dashboard')">📊 Dashboard</button>
+<button class="btn btn-danger ms-auto" onclick="logout()">Logout</button>
 </nav>
 
 <!-- FORM -->
-<div id="form" class="card p-4">
-  <h6>📝 Pengajuan Re-Expertise</h6>
-  <input id="tNama" class="form-control mb-2" placeholder="Nama Pasien">
-  <input id="tRM" class="form-control mb-2" placeholder="No RM">
-  <input id="tRanap" class="form-control mb-2" placeholder="Unit / Ruangan">
-  <textarea id="tPermohonan" class="form-control mb-3" placeholder="Permohonan"></textarea>
-  <button class="btn btn-primary" onclick="submit()">Simpan</button>
+<div id="form" class="card p-4 hidden">
+<input id="tNama" class="form-control mb-2" placeholder="Nama Pasien">
+<textarea id="tPermohonan" class="form-control mb-3" placeholder="Permohonan"></textarea>
+<button class="btn btn-primary" onclick="submit()">Simpan</button>
 </div>
 
 <!-- MONITOR -->
-<div id="monitor" class="hidden">
-
-<!-- DASHBOARD -->
-<div class="row mb-3">
-  <div class="col-md-3 mb-2">
-    <div class="card stat bg-primary p-3 text-center">
-      <div>BARU</div><h3 id="cntBaru">0</h3>
-    </div>
-  </div>
-  <div class="col-md-3 mb-2">
-    <div class="card stat bg-warning p-3 text-center">
-      <div>DIPROSES</div><h3 id="cntProses">0</h3>
-    </div>
-  </div>
-  <div class="col-md-3 mb-2">
-    <div class="card stat bg-success p-3 text-center">
-      <div>SELESAI</div><h3 id="cntSelesai">0</h3>
-    </div>
-  </div>
-  <div class="col-md-3 mb-2">
-    <div class="card bg-dark text-white p-3 text-center">
-      <div>⏱ Rata-rata (menit)</div><h4 id="avgTime">0</h4>
-    </div>
-  </div>
-</div>
-
-<!-- TABLE -->
-<div class="card p-3">
-<table class="table table-bordered">
+<div id="monitor" class="card p-3">
+<table class="table table-bordered align-middle">
 <thead>
 <tr>
-<th>No</th><th>Nama</th><th>RM</th><th>Unit</th>
-<th>Status</th><th>Komentar</th><th>Aksi (ADMIN)</th>
+<th>No</th><th>Nama</th><th>Status</th><th>Chat</th><th>Aksi</th>
 </tr>
 </thead>
 <tbody id="data"></tbody>
 </table>
 </div>
 
+<!-- DASHBOARD -->
+<div id="dashboard" class="hidden">
+<div class="row">
+<div class="col-md-6 mb-3">
+<div class="card p-3">
+<h6>Grafik SLA (menit)</h6>
+<canvas id="slaChart"></canvas>
 </div>
+</div>
+<div class="col-md-6 mb-3">
+<div class="card p-3">
+<h6>Grafik Waktu Tunggu (menit)</h6>
+<canvas id="waitChart"></canvas>
+</div>
+</div>
+</div>
+</div>
+
 </div>
 
 <script>
 const DB="https://develop-re-expertise2026-default-rtdb.asia-southeast1.firebasedatabase.app";
-let ROLE="";
+let ROLE="",isTyping=false,lastChatCount=0;
+let slaChart,waitChart;
 
 /* LOGIN */
 function login(){
-  const u=username.value;
-  const p=password.value;
-
-  if(u==="201708073" && p==="Papamama00"){
-    ROLE="ADMIN";
-  }else if(u==="USER" && p==="rsmp11"){
-    ROLE="USER";
-  }else{
-    alert("Username / Password salah");
-    return;
-  }
-
-  localStorage.setItem("role",ROLE);
-  loginBox.classList.add("hidden");
-  app.classList.remove("hidden");
+if(username.value==="201708073"&&password.value==="Papamama00")ROLE="ADMIN";
+else if(username.value==="USER"&&password.value==="rsmp11")ROLE="USER";
+else return alert("Login salah");
+localStorage.setItem("role",ROLE);
+init();
 }
-
-if(localStorage.getItem("role")){
-  ROLE=localStorage.getItem("role");
-  loginBox.classList.add("hidden");
-  app.classList.remove("hidden");
+function init(){
+ROLE=localStorage.getItem("role");
+loginBox.classList.add("hidden");
+app.classList.remove("hidden");
+openTool("monitor");
+load();
 }
-
-function logout(){
-  localStorage.clear();
-  location.reload();
-}
+if(localStorage.getItem("role"))init();
+function logout(){localStorage.clear();location.reload();}
 
 /* NAV */
 function openTool(id){
-  document.querySelectorAll('#form,#monitor').forEach(x=>x.classList.add("hidden"));
-  document.getElementById(id).classList.remove("hidden");
+["form","monitor","dashboard"].forEach(x=>document.getElementById(x).classList.add("hidden"));
+document.getElementById(id).classList.remove("hidden");
 }
 
 /* SUBMIT */
 function submit(){
-if(!tNama.value||!tRM.value)return alert("Data belum lengkap");
-fetch(DB+"/permohonan.json",{method:"POST",
-body:JSON.stringify({
+if(!tNama.value)return alert("Nama kosong");
+fetch(DB+"/permohonan.json",{method:"POST",body:JSON.stringify({
 nama:tNama.value,
-rm:tRM.value,
-ranap:tRanap.value,
 permohonan:tPermohonan.value,
 status:"BARU",
-komentar:"",
 created:Date.now()
 })});
-tNama.value=tRM.value=tRanap.value=tPermohonan.value="";
+tNama.value="";tPermohonan.value="";
 }
 
 /* LOAD */
 function load(){
+if(isTyping){setTimeout(load,3000);return;}
 fetch(DB+"/permohonan.json").then(r=>r.json()).then(d=>{
-let h="",n=1,baru=0,proses=0,selesai=0,totalTime=0,countTime=0;
 if(!d)return;
+let h="",n=1,sla=[],wait=[];
+let chatCounter=0;
 
-for(let k in d){
+Object.keys(d).sort((a,b)=>d[a].created-d[b].created).forEach(k=>{
 let x=d[k];
-if(x.status==="BARU")baru++;
-if(x.status==="DIPROSES")proses++;
-if(x.status==="SELESAI"){selesai++;if(x.proses&&x.selesai){totalTime+=(x.selesai-x.proses);countTime++;}}
+
+if(x.proses)wait.push((x.proses-x.created)/60000);
+if(x.selesai)sla.push((x.selesai-x.created)/60000);
+
+let chatHTML="";
+if(x.chat){
+Object.values(x.chat).forEach(c=>{
+chatCounter++;
+chatHTML+=`
+<div class="${c.role==="ADMIN"?"chat-admin":"chat-user"}">
+${c.text}<div class="chat-time">${new Date(c.time).toLocaleTimeString()}</div>
+</div>`;
+});
+}
 
 h+=`
 <tr>
 <td>${n++}</td>
 <td>${x.nama}</td>
-<td>${x.rm}</td>
-<td>${x.ranap||"-"}</td>
-<td><b>${x.status}</b></td>
-<td>${x.komentar||"-"}</td>
+<td>${x.status}</td>
+<td>
+<div class="chat-box">${chatHTML}</div>
+${ROLE==="ADMIN"||ROLE==="USER"?`
+<input class="form-control form-control-sm mt-1"
+placeholder="Ketik pesan..."
+onfocus="isTyping=true"
+onblur="isTyping=false"
+onkeydown="if(event.key==='Enter')sendChat('${k}',this)">
+`:""}
+</td>
 <td>${ROLE==="ADMIN"?`
-<button class="btn btn-sm btn-secondary" onclick="toggleAksi('${k}')">Aksi</button>
-<div id="aksi-${k}" class="hidden mt-2">
 <button class="btn btn-sm btn-warning mb-1" onclick="setStatus('${k}','DIPROSES')">Proses</button>
-<button class="btn btn-sm btn-success mb-1" onclick="setStatus('${k}','SELESAI')">Selesai</button>
-<input id="kom-${k}" class="form-control form-control-sm mb-1" value="${x.komentar||""}">
-<button class="btn btn-sm btn-info" onclick="saveKomentar('${k}')">Simpan</button>
-</div>`:"-"}</td>
+<button class="btn btn-sm btn-success" onclick="setStatus('${k}','SELESAI')">Selesai</button>`:"-"}
+</td>
 </tr>`;
-}
+});
 
 data.innerHTML=h;
-cntBaru.innerText=baru;
-cntProses.innerText=proses;
-cntSelesai.innerText=selesai;
-avgTime.innerText=countTime?Math.round(totalTime/60000/countTime):0;
+renderCharts(sla,wait);
+
+/* NOTIFIKASI ADMIN */
+if(ROLE==="ADMIN" && chatCounter>lastChatCount){
+document.getElementById("notifSound").play();
+}
+lastChatCount=chatCounter;
 });
 setTimeout(load,3000);
 }
-load();
 
-/* ACTION */
-function toggleAksi(id){
-document.querySelectorAll("[id^='aksi-']").forEach(x=>x.classList.add("hidden"));
-document.getElementById("aksi-"+id).classList.toggle("hidden");
+/* CHAT */
+function sendChat(id,input){
+if(!input.value)return;
+fetch(DB+"/permohonan/"+id+"/chat.json",{method:"POST",
+body:JSON.stringify({
+text:input.value,
+role:ROLE,
+time:Date.now()
+})});
+input.value="";
 }
+
+/* STATUS */
 function setStatus(id,s){
 let o={status:s};
 if(s==="DIPROSES")o.proses=Date.now();
 if(s==="SELESAI")o.selesai=Date.now();
 fetch(DB+"/permohonan/"+id+".json",{method:"PATCH",body:JSON.stringify(o)});
 }
-function saveKomentar(id){
-let v=document.getElementById("kom-"+id).value;
-fetch(DB+"/permohonan/"+id+".json",{method:"PATCH",body:JSON.stringify({komentar:v})});
-}
-</script>
 
+/* CHART */
+function renderCharts(sla,wait){
+if(!slaChart){
+slaChart=new Chart(document.getElementById("slaChart"),{
+type:"bar",
+data:{labels:sla.map((_,i)=>"Data "+(i+1)),datasets:[{data:sla}]},
+options:{plugins:{legend:{display:false}}}
+});
+}else{
+slaChart.data.datasets[0].data=sla;
+slaChart.update();
+}
+if(!waitChart){
+waitChart=new Chart(document.getElementById("waitChart"),{
+type:"line",
+data:{labels:wait.map((_,i)=>"Data "+(i+1)),datasets:[{data:wait,tension:.3}]},
+options:{plugins:{legend:{display:false}}}
+});
+}else{
+waitChart.data.datasets[0].data=wait;
+waitChart.update();
+}
+}
+
+load();
+</script>
 </body>
 </html>
