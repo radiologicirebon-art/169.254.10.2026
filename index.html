@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Radiologi | RS Mitra Plumbon Cirebon </title>
+<title>Radiologi | Re-Expertise Final.v7.2 STABLE</title>
 
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -37,7 +37,7 @@ body{background:#eef5ff;font-family:Segoe UI,Arial;font-size:14px}
 
 <div class="card p-3 mb-3">
 <b>Re-Expertise Radiologi</b><br>
-<small>RS Mitra Plumbon • <b>.v7.2 STABLE</b></small>
+<small>RS Mitra Plumbon • <b>Final.v7.2 STABLE</b></small>
 </div>
 
 <nav class="mb-3 d-flex gap-2">
@@ -63,8 +63,14 @@ body{background:#eef5ff;font-family:Segoe UI,Arial;font-size:14px}
 <table class="table table-bordered align-middle">
 <thead>
 <tr>
-<th>No</th><th>Nama</th><th>No RM</th><th>Ranap</th>
-<th>Status</th><th>Chat</th><th>Aksi</th>
+<th>No</th>
+<th>Nama</th>
+<th>No RM</th>
+<th>Ranap</th>
+<th>Status</th>
+<th>Permintaan Re-Expertise</th>
+<th>Chat</th>
+<th>Aksi</th>
 </tr>
 </thead>
 <tbody id="data"></tbody>
@@ -94,8 +100,7 @@ body{background:#eef5ff;font-family:Segoe UI,Arial;font-size:14px}
 
 <script>
 const DB="https://develop-re-expertise2026-default-rtdb.asia-southeast1.firebasedatabase.app";
-let ROLE="",isTyping=false,slaChart,waitChart;
-let lastChatCount={};
+let ROLE="",isTyping=false,slaChart,waitChart,lastChatCount={};
 
 /* LOGIN */
 function login(){
@@ -113,6 +118,7 @@ app.classList.remove("hidden");
 openTool("monitor");
 load();
 }
+
 function logout(){localStorage.clear();location.reload();}
 function openTool(id){
 ['form','monitor','dashboard'].forEach(x=>document.getElementById(x).classList.add("hidden"));
@@ -156,10 +162,11 @@ ${c.text}<div class="chat-time">${new Date(c.time).toLocaleTimeString()}</div>
 h+=`
 <tr>
 <td>${n++}</td>
-<td>${x.nama}</td>
-<td>${x.rm}</td>
-<td>${x.ranap}</td>
+<td>${x.nama||"-"}</td>
+<td>${x.rm||"-"}</td>
+<td>${x.ranap||"-"}</td>
 <td><b>${x.status}</b></td>
+<td>${x.permohonan||"-"}</td>
 <td>
 <div class="chat-box" id="chat-${k}">${chatHtml}</div>
 <input class="form-control form-control-sm mt-1"
@@ -192,14 +199,14 @@ function renderCharts(sla,wait){
 if(!slaChart){
 slaChart=new Chart(slaChart=document.getElementById("slaChart"),{
 type:'bar',data:{labels:sla.map((_,i)=>"Data "+(i+1)),datasets:[{data:sla}]},
-options:{plugins:{legend:{display:false}}}});
-}else{slaChart.data.datasets[0].data=sla;slaChart.update();}
+options:{plugins:{legend:{display:false}}}});}
+else{slaChart.data.datasets[0].data=sla;slaChart.update();}
 
 if(!waitChart){
 waitChart=new Chart(waitChart=document.getElementById("waitChart"),{
 type:'line',data:{labels:wait.map((_,i)=>"Data "+(i+1)),datasets:[{data:wait,tension:.3}]},
-options:{plugins:{legend:{display:false}}}});
-}else{waitChart.data.datasets[0].data=wait;waitChart.update();}
+options:{plugins:{legend:{display:false}}}});}
+else{waitChart.data.datasets[0].data=wait;waitChart.update();}
 }
 
 /* STATUS */
@@ -210,5 +217,6 @@ if(s==="SELESAI")p.selesai=Date.now();
 fetch(DB+"/permohonan/"+id+".json",{method:"PATCH",body:JSON.stringify(p)});
 }
 </script>
+
 </body>
 </html>
