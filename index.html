@@ -8,6 +8,10 @@
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+<!-- FIREBASE -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+
 <style>
 body{background:#eef5ff;font-family:Segoe UI,Arial;font-size:14px}
 .card{border-radius:16px;box-shadow:0 4px 14px rgba(0,0,0,.08)}
@@ -99,124 +103,165 @@ body{background:#eef5ff;font-family:Segoe UI,Arial;font-size:14px}
 </div>
 
 <script>
+/* ================= FIREBASE INIT ================= */
+firebase.initializeApp({
+  apiKey: "API_KEY_KAMU",
+  authDomain: "develop-re-expertise2026.firebaseapp.com",
+  databaseURL: "https://develop-re-expertise2026-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "develop-re-expertise2026"
+});
+const auth = firebase.auth();
+
+/* ================= GLOBAL ================= */
 const DB="https://develop-re-expertise2026-default-rtdb.asia-southeast1.firebasedatabase.app";
-let ROLE="",isTyping=false,slaChart,waitChart,lastChatCount={};
+let ROLE="", TOKEN="", isTyping=false, slaChart, waitChart, lastChatCount={};
 
-/* LOGIN */
+/* ================= AUTH HELPER ================= */
+async function fetchAuth(url, opt={}){
+  if(!TOKEN){
+    TOKEN = await auth.currentUser.getIdToken();
+  }
+  return fetch(`${url}?auth=${TOKEN}`, opt);
+}
+
+/* ================= LOGIN ================= */
 function login(){
-if(username.value==="201708073"&&password.value==="Papamama00")ROLE="ADMIN";
-else if(username.value==="USER"&&password.value==="rsmp11")ROLE="USER";
-else return alert("Login salah");
-localStorage.setItem("role",ROLE);init();
-}
-if(localStorage.getItem("role"))init();
+  const map={
+    "201708073":"admin@rsmp.com",
+    "USER":"user@rsmp.com"
+  };
+  const email=map[username.value];
+  if(!email) return alert("Login salah");
 
+  auth.signInWithEmailAndPassword(email,password.value)
+  .then(r=>{
+    ROLE=email.includes("admin")?"ADMIN":"USER";
+    localStorage.setItem("role",ROLE);
+    TOKEN=null;
+    init();
+  })
+  .catch(()=>alert("Auth gagal"));
+}
+
+auth.onAuthStateChanged(u=>{
+  if(u){
+    ROLE=localStorage.getItem("role");
+    init();
+  }
+});
+
+function logout(){
+  auth.signOut();
+  localStorage.clear();
+  location.reload();
+}
+
+/* ================= UI ================= */
 function init(){
-ROLE=localStorage.getItem("role");
-loginBox.classList.add("hidden");
-app.classList.remove("hidden");
-openTool("monitor");
-load();
+  loginBox.classList.add("hidden");
+  app.classList.remove("hidden");
+  openTool("monitor");
+  load();
 }
 
-function logout(){localStorage.clear();location.reload();}
 function openTool(id){
 ['form','monitor','dashboard'].forEach(x=>document.getElementById(x).classList.add("hidden"));
 document.getElementById(id).classList.remove("hidden");
 }
 
-/* SUBMIT */
-function submit(){
-if(!tNama.value||!tRM.value||!tRanap.value||!tPermohonan.value)
-return alert("Semua field wajib diisi");
-fetch(DB+"/permohonan.json",{method:"POST",body:JSON.stringify({
-nama:tNama.value,rm:tRM.value,ranap:tRanap.value,
-permohonan:tPermohonan.value,status:"BARU",created:Date.now()
-})});
-tNama.value=tRM.value=tRanap.value=tPermohonan.value="";
-openTool("monitor");
+/* ================= SUBMIT ================= */
+async function submit(){
+  if(!tNama.value||!tRM.value||!tRanap.value||!tPermohonan.value)
+    return alert("Semua field wajib diisi");
+
+  await fetchAuth(DB+"/permohonan.json",{
+    method:"POST",
+    body:JSON.stringify({
+      nama:tNama.value,rm:tRM.value,ranap:tRanap.value,
+      permohonan:tPermohonan.value,status:"BARU",created:Date.now()
+    })
+  });
+  tNama.value=tRM.value=tRanap.value=tPermohonan.value="";
+  openTool("monitor");
 }
 
-/* LOAD */
-function load(){
-if(isTyping){setTimeout(load,3000);return;}
+/* ================= LOAD ================= */
+async function load(){
+  if(isTyping){setTimeout(load,3000);return;}
 
-fetch(DB+"/permohonan.json").then(r=>r.json()).then(d=>{
-let h="",n=1,sla=[],wait=[];
-for(let k in d){
-let x=d[k];
-if(x.proses&&x.selesai)sla.push((x.selesai-x.created)/60000);
-if(x.proses)wait.push((x.proses-x.created)/60000);
+  const r=await fetchAuth(DB+"/permohonan.json");
+  const d=await r.json()||{};
+  let h="",n=1,sla=[],wait=[];
 
-let chats=Object.values(x.chat||{});
-if(ROLE==="ADMIN" && chats.length>(lastChatCount[k]||0)){
-document.getElementById("notifSound").play();
-}
-lastChatCount[k]=chats.length;
+  for(let k in d){
+    let x=d[k];
+    if(x.proses&&x.selesai)sla.push((x.selesai-x.created)/60000);
+    if(x.proses)wait.push((x.proses-x.created)/60000);
 
-let chatHtml=chats.map(c=>`
-<div class="${c.role==='ADMIN'?'chat-admin':'chat-user'}">
-${c.text}<div class="chat-time">${new Date(c.time).toLocaleTimeString()}</div>
-</div>`).join("");
+    let chats=Object.values(x.chat||{});
+    if(ROLE==="ADMIN" && chats.length>(lastChatCount[k]||0))
+      notifSound.play();
+    lastChatCount[k]=chats.length;
 
-h+=`
-<tr>
-<td>${n++}</td>
-<td>${x.nama||"-"}</td>
-<td>${x.rm||"-"}</td>
-<td>${x.ranap||"-"}</td>
-<td><b>${x.status}</b></td>
-<td>${x.permohonan||"-"}</td>
-<td>
-<div class="chat-box" id="chat-${k}">${chatHtml}</div>
-<input class="form-control form-control-sm mt-1"
-placeholder="Ketik pesan..."
-onfocus="isTyping=true" onblur="isTyping=false"
-onkeydown="if(event.key==='Enter')sendChat('${k}',this)">
-</td>
-<td>${ROLE==="ADMIN"?`
-<button class="btn btn-sm btn-warning mb-1" onclick="setStatus('${k}','DIPROSES')">Proses</button>
-<button class="btn btn-sm btn-success mb-1" onclick="setStatus('${k}','SELESAI')">Selesai</button>`:"-"}</td>
-</tr>`;
-}
-data.innerHTML=h;
-document.querySelectorAll(".chat-box").forEach(c=>c.scrollTop=c.scrollHeight);
-renderCharts(sla,wait);
-});
-setTimeout(load,3000);
+    let chatHtml=chats.map(c=>`
+      <div class="${c.role==='ADMIN'?'chat-admin':'chat-user'}">
+      ${c.text}<div class="chat-time">${new Date(c.time).toLocaleTimeString()}</div>
+      </div>`).join("");
+
+    h+=`
+    <tr>
+      <td>${n++}</td><td>${x.nama||"-"}</td><td>${x.rm||"-"}</td>
+      <td>${x.ranap||"-"}</td><td><b>${x.status}</b></td>
+      <td>${x.permohonan||"-"}</td>
+      <td>
+        <div class="chat-box">${chatHtml}</div>
+        <input class="form-control form-control-sm mt-1"
+        onfocus="isTyping=true" onblur="isTyping=false"
+        onkeydown="if(event.key==='Enter')sendChat('${k}',this)">
+      </td>
+      <td>${ROLE==="ADMIN"?`
+      <button class="btn btn-sm btn-warning" onclick="setStatus('${k}','DIPROSES')">Proses</button>
+      <button class="btn btn-sm btn-success" onclick="setStatus('${k}','SELESAI')">Selesai</button>`:"-"}</td>
+    </tr>`;
+  }
+  data.innerHTML=h;
+  renderCharts(sla,wait);
+  setTimeout(load,3000);
 }
 
-/* CHAT */
-function sendChat(id,el){
-if(!el.value)return;
-fetch(DB+"/permohonan/"+id+"/chat.json",{method:"POST",
-body:JSON.stringify({text:el.value,role:ROLE,time:Date.now()})});
-el.value="";
+/* ================= CHAT & STATUS ================= */
+async function sendChat(id,el){
+  if(!el.value)return;
+  await fetchAuth(DB+`/permohonan/${id}/chat.json`,{
+    method:"POST",
+    body:JSON.stringify({text:el.value,role:ROLE,time:Date.now()})
+  });
+  el.value="";
 }
 
-/* CHART */
+async function setStatus(id,s){
+  let p={status:s};
+  if(s==="DIPROSES")p.proses=Date.now();
+  if(s==="SELESAI")p.selesai=Date.now();
+  await fetchAuth(DB+`/permohonan/${id}.json`,{
+    method:"PATCH",body:JSON.stringify(p)
+  });
+}
+
+/* ================= CHART ================= */
 function renderCharts(sla,wait){
-if(!slaChart){
-slaChart=new Chart(slaChart=document.getElementById("slaChart"),{
-type:'bar',data:{labels:sla.map((_,i)=>"Data "+(i+1)),datasets:[{data:sla}]},
-options:{plugins:{legend:{display:false}}}});}
-else{slaChart.data.datasets[0].data=sla;slaChart.update();}
+  if(!slaChart)
+    slaChart=new Chart(slaChart=document.getElementById("slaChart"),
+    {type:'bar',data:{labels:sla.map((_,i)=>i+1),datasets:[{data:sla}]},
+     options:{plugins:{legend:{display:false}}}});
+  else slaChart.data.datasets[0].data=sla,slaChart.update();
 
-if(!waitChart){
-waitChart=new Chart(waitChart=document.getElementById("waitChart"),{
-type:'line',data:{labels:wait.map((_,i)=>"Data "+(i+1)),datasets:[{data:wait,tension:.3}]},
-options:{plugins:{legend:{display:false}}}});}
-else{waitChart.data.datasets[0].data=wait;waitChart.update();}
-}
-
-/* STATUS */
-function setStatus(id,s){
-let p={status:s};
-if(s==="DIPROSES")p.proses=Date.now();
-if(s==="SELESAI")p.selesai=Date.now();
-fetch(DB+"/permohonan/"+id+".json",{method:"PATCH",body:JSON.stringify(p)});
+  if(!waitChart)
+    waitChart=new Chart(waitChart=document.getElementById("waitChart"),
+    {type:'line',data:{labels:wait.map((_,i)=>i+1),datasets:[{data:wait,tension:.3}]},
+     options:{plugins:{legend:{display:false}}}});
+  else waitChart.data.datasets[0].data=wait,waitChart.update();
 }
 </script>
-
 </body>
 </html>
