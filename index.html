@@ -13,26 +13,50 @@
 <style>
 
 body{
-background:#eef5ff;
-font-family:Segoe UI;
-font-size:14px
+background:#f3f6fb;
+font-family:'Segoe UI',Roboto,Arial;
+font-size:14px;
+color:#2c3e50;
+}
+
+.header-card{
+background:linear-gradient(135deg,#3b82f6,#1d4ed8);
+color:white;
+border-radius:18px;
+padding:18px;
+box-shadow:0 6px 20px rgba(0,0,0,.15);
 }
 
 .card{
+border:none;
 border-radius:16px;
-box-shadow:0 4px 14px rgba(0,0,0,.08)
+box-shadow:0 4px 12px rgba(0,0,0,.08);
 }
 
 .hidden{
-display:none
+display:none;
+}
+
+.table{
+font-size:13px;
+}
+
+.table thead{
+background:#f1f5f9;
+font-weight:600;
+}
+
+.table td{
+vertical-align:middle;
 }
 
 .chat-box{
-max-height:160px;
+max-height:140px;
 overflow-y:auto;
-background:#f8f9fa;
+background:#f8fafc;
 padding:8px;
-border-radius:8px
+border-radius:10px;
+border:1px solid #e2e8f0;
 }
 
 .chat-admin{
@@ -40,7 +64,8 @@ background:#dbeafe;
 padding:6px 10px;
 border-radius:12px;
 margin:4px 0;
-text-align:right
+text-align:right;
+font-size:13px;
 }
 
 .chat-user{
@@ -48,12 +73,45 @@ background:#dcfce7;
 padding:6px 10px;
 border-radius:12px;
 margin:4px 0;
-text-align:left
+text-align:left;
+font-size:13px;
 }
 
 .chat-time{
-font-size:11px;
-color:#666
+font-size:10px;
+color:#64748b;
+}
+
+.btn{
+border-radius:10px;
+font-size:13px;
+}
+
+.btn-warning{
+background:#f59e0b;
+border:none;
+}
+
+.btn-success{
+background:#10b981;
+border:none;
+}
+
+.btn-outline-primary{
+border-radius:10px;
+}
+
+input,textarea{
+border-radius:10px !important;
+}
+
+nav button{
+min-width:120px;
+}
+
+h6{
+font-weight:600;
+color:#334155;
 }
 
 </style>
@@ -85,11 +143,13 @@ color:#666
 
 <div id="app" class="hidden">
 
-<div class="card p-3 mb-3">
+<div class="header-card mb-3">
 
-<b>Re-Expertise Radiologi</b><br>
+<h5 class="mb-1">🩻 Re-Expertise Radiologi</h5>
 
-<small>RS Mitra Plumbon • <b>v8 PRO</b></small>
+<small>
+RS Mitra Plumbon Cirebon • Dashboard Monitoring v8 PRO
+</small>
 
 </div>
 
@@ -116,7 +176,7 @@ Logout
 
 
 
-<!-- FORM PERMOHONAN -->
+<!-- FORM -->
 
 <div id="form" class="card p-4 hidden">
 
@@ -136,11 +196,9 @@ Logout
 
 
 
-<!-- MONITOR ORDER -->
+<!-- MONITOR -->
 
 <div id="monitor" class="hidden">
-
-<!-- ORDER BARU -->
 
 <div class="card p-3 mb-3">
 
@@ -149,9 +207,7 @@ Logout
 <table class="table table-bordered align-middle">
 
 <thead>
-
 <tr>
-
 <th>No</th>
 <th>Nama</th>
 <th>No RM</th>
@@ -159,9 +215,7 @@ Logout
 <th>Permintaan</th>
 <th>Chat</th>
 <th>Aksi</th>
-
 </tr>
-
 </thead>
 
 <tbody id="orderBaru"></tbody>
@@ -171,8 +225,6 @@ Logout
 </div>
 
 
-<!-- ORDER SELESAI -->
-
 <div class="card p-3">
 
 <h6>✅ Keranjang Order Selesai</h6>
@@ -180,18 +232,14 @@ Logout
 <table class="table table-bordered align-middle">
 
 <thead>
-
 <tr>
-
 <th>No</th>
 <th>Nama</th>
 <th>No RM</th>
 <th>Ranap</th>
 <th>Permintaan</th>
 <th>Waktu Selesai</th>
-
 </tr>
-
 </thead>
 
 <tbody id="orderSelesai"></tbody>
@@ -211,28 +259,17 @@ Logout
 <div class="row">
 
 <div class="col-md-6 mb-3">
-
 <div class="card p-3">
-
 <h6>Grafik SLA (menit)</h6>
-
 <canvas id="slaChart"></canvas>
-
 </div>
-
 </div>
-
 
 <div class="col-md-6 mb-3">
-
 <div class="card p-3">
-
 <h6>Grafik Waktu Tunggu (menit)</h6>
-
 <canvas id="waitChart"></canvas>
-
 </div>
-
 </div>
 
 </div>
@@ -254,7 +291,6 @@ let waitChart
 let lastChatCount={}
 
 
-
 /* LOGIN */
 
 function login(){
@@ -273,9 +309,7 @@ init()
 
 }
 
-
 if(localStorage.getItem("role"))init()
-
 
 
 function init(){
@@ -283,7 +317,6 @@ function init(){
 ROLE=localStorage.getItem("role")
 
 loginBox.classList.add("hidden")
-
 app.classList.remove("hidden")
 
 openTool("monitor")
@@ -292,26 +325,19 @@ load()
 
 }
 
-
-
 function logout(){
 
 localStorage.clear()
-
 location.reload()
 
 }
 
-
-
 function openTool(id){
 
 ['form','monitor','dashboard'].forEach(x=>document.getElementById(x).classList.add("hidden"))
-
 document.getElementById(id).classList.remove("hidden")
 
 }
-
 
 
 /* SUBMIT */
@@ -328,15 +354,10 @@ method:"POST",
 body:JSON.stringify({
 
 nama:tNama.value,
-
 rm:tRM.value,
-
 ranap:tRanap.value,
-
 permohonan:tPermohonan.value,
-
 status:"BARU",
-
 created:Date.now()
 
 })
@@ -353,17 +374,14 @@ openTool("monitor")
 }
 
 
-
-/* LOAD DATA */
+/* LOAD */
 
 function load(){
 
 if(isTyping){setTimeout(load,3000);return}
 
 fetch(DB+"/permohonan.json")
-
 .then(r=>r.json())
-
 .then(d=>{
 
 let baru=""
@@ -385,43 +403,25 @@ sla.push((x.selesai-x.created)/60000)
 if(x.proses)
 wait.push((x.proses-x.created)/60000)
 
-
-
 let chats=Object.values(x.chat||{})
 
-
-
 if(ROLE==="ADMIN" && chats.length>(lastChatCount[k]||0)){
-
 document.getElementById("notifSound").play()
-
 }
 
-
-
 lastChatCount[k]=chats.length
-
-
 
 let chatHtml=chats.map(c=>`
 
 <div class="${c.role==='ADMIN'?'chat-admin':'chat-user'}">
-
 ${c.text}
-
 <div class="chat-time">
-
 ${new Date(c.time).toLocaleTimeString()}
-
 </div>
-
 </div>
 
 `).join("")
 
-
-
-/* ORDER BARU */
 
 if(x.status==="BARU" || x.status==="DIPROSES"){
 
@@ -430,13 +430,9 @@ baru+=`
 <tr>
 
 <td>${n1++}</td>
-
 <td>${x.nama||"-"}</td>
-
 <td>${x.rm||"-"}</td>
-
 <td>${x.ranap||"-"}</td>
-
 <td>${x.permohonan||"-"}</td>
 
 <td>
@@ -444,13 +440,9 @@ baru+=`
 <div class="chat-box">${chatHtml}</div>
 
 <input class="form-control form-control-sm mt-1"
-
 placeholder="Ketik pesan..."
-
 onfocus="isTyping=true"
-
 onblur="isTyping=false"
-
 onkeydown="if(event.key==='Enter')sendChat('${k}',this)">
 
 </td>
@@ -460,20 +452,10 @@ onkeydown="if(event.key==='Enter')sendChat('${k}',this)">
 ${ROLE==="ADMIN"?`
 
 <button class="btn btn-sm btn-warning mb-1"
-
-onclick="setStatus('${k}','DIPROSES')">
-
-Proses
-
-</button>
+onclick="setStatus('${k}','DIPROSES')">Proses</button>
 
 <button class="btn btn-sm btn-success"
-
-onclick="setStatus('${k}','SELESAI')">
-
-Selesai
-
-</button>
+onclick="setStatus('${k}','SELESAI')">Selesai</button>
 
 `:"-"}
 
@@ -485,10 +467,6 @@ Selesai
 
 }
 
-
-
-/* ORDER SELESAI */
-
 if(x.status==="SELESAI"){
 
 selesai+=`
@@ -496,15 +474,10 @@ selesai+=`
 <tr>
 
 <td>${n2++}</td>
-
 <td>${x.nama||"-"}</td>
-
 <td>${x.rm||"-"}</td>
-
 <td>${x.ranap||"-"}</td>
-
 <td>${x.permohonan||"-"}</td>
-
 <td>${new Date(x.selesai).toLocaleString()}</td>
 
 </tr>
@@ -515,24 +488,16 @@ selesai+=`
 
 }
 
-
-
 orderBaru.innerHTML=baru
-
 orderSelesai.innerHTML=selesai
-
-
 
 renderCharts(sla,wait)
 
 })
 
-
-
 setTimeout(load,3000)
 
 }
-
 
 
 /* CHAT */
@@ -541,8 +506,6 @@ function sendChat(id,el){
 
 if(!el.value)return
 
-
-
 fetch(DB+"/permohonan/"+id+"/chat.json",{
 
 method:"POST",
@@ -550,21 +513,16 @@ method:"POST",
 body:JSON.stringify({
 
 text:el.value,
-
 role:ROLE,
-
 time:Date.now()
 
 })
 
 })
 
-
-
 el.value=""
 
 }
-
 
 
 /* STATUS */
@@ -574,10 +532,7 @@ function setStatus(id,s){
 let p={status:s}
 
 if(s==="DIPROSES")p.proses=Date.now()
-
 if(s==="SELESAI")p.selesai=Date.now()
-
-
 
 fetch(DB+"/permohonan/"+id+".json",{
 
@@ -588,7 +543,6 @@ body:JSON.stringify(p)
 })
 
 }
-
 
 
 /* CHART */
@@ -602,26 +556,17 @@ slaChart=new Chart(
 document.getElementById("slaChart"),
 
 {
-
 type:'bar',
-
 data:{labels:sla.map((_,i)=>"Data "+(i+1)),datasets:[{data:sla}]},
-
 options:{plugins:{legend:{display:false}}}
-
 })
 
-}
-
-else{
+}else{
 
 slaChart.data.datasets[0].data=sla
-
 slaChart.update()
 
 }
-
-
 
 if(!waitChart){
 
@@ -630,21 +575,14 @@ waitChart=new Chart(
 document.getElementById("waitChart"),
 
 {
-
 type:'line',
-
 data:{labels:wait.map((_,i)=>"Data "+(i+1)),datasets:[{data:wait,tension:.3}]},
-
 options:{plugins:{legend:{display:false}}}
-
 })
 
-}
-
-else{
+}else{
 
 waitChart.data.datasets[0].data=wait
-
 waitChart.update()
 
 }
