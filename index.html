@@ -1,1264 +1,595 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
+
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>Radiologi Re-Expertise v9</title>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>Radiologi Re-Expertise v8 PRO</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-:root {
-  --bg: #070b14;
-  --surface: #0f1623;
-  --surface2: #161e2e;
-  --surface3: #1c2840;
-  --border: rgba(255,255,255,0.06);
-  --border2: rgba(255,255,255,0.12);
-  --accent: #3b82f6;
-  --accent2: #06b6d4;
-  --accent3: #8b5cf6;
-  --green: #10b981;
-  --amber: #f59e0b;
-  --red: #ef4444;
-  --text: #f1f5f9;
-  --text2: #94a3b8;
-  --text3: #475569;
-  --radius: 16px;
-  --radius-sm: 10px;
-  --glow: 0 0 40px rgba(59,130,246,0.15);
-  --shadow: 0 4px 24px rgba(0,0,0,0.4);
-}
-
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-html { font-size: 14px; -webkit-text-size-adjust: 100%; }
-
-body {
-  background: var(--bg);
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  color: var(--text);
-  min-height: 100vh;
-  overflow-x: hidden;
-}
-
-/* BACKGROUND MESH */
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  background:
-    radial-gradient(ellipse 80% 50% at 20% -10%, rgba(59,130,246,0.12) 0%, transparent 60%),
-    radial-gradient(ellipse 60% 40% at 80% 110%, rgba(139,92,246,0.1) 0%, transparent 60%),
-    radial-gradient(ellipse 50% 50% at 50% 50%, rgba(6,182,212,0.04) 0%, transparent 70%);
-  pointer-events: none;
-  z-index: 0;
-}
-
-/* ===== LOGIN ===== */
-.login-wrap {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  padding: 20px;
-  position: relative;
-  z-index: 1;
-}
-
-.login-card {
-  width: 100%;
-  max-width: 380px;
-  background: var(--surface);
-  border: 1px solid var(--border2);
-  border-radius: 24px;
-  padding: 36px 28px;
-  box-shadow: var(--shadow), 0 0 80px rgba(59,130,246,0.08);
-  animation: slideUp 0.5s cubic-bezier(.16,1,.3,1);
-}
-
-@keyframes slideUp {
-  from { opacity:0; transform: translateY(30px); }
-  to   { opacity:1; transform: translateY(0); }
-}
-
-.login-logo {
-  width: 56px;
-  height: 56px;
-  background: linear-gradient(135deg, var(--accent), var(--accent2));
-  border-radius: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 26px;
-  margin: 0 auto 20px;
-  box-shadow: 0 8px 24px rgba(59,130,246,0.4);
-}
-
-.login-title {
-  text-align: center;
-  font-size: 20px;
-  font-weight: 700;
-  margin-bottom: 4px;
-}
-
-.login-sub {
-  text-align: center;
-  font-size: 12px;
-  color: var(--text2);
-  margin-bottom: 28px;
-  line-height: 1.5;
-}
-
-.field-group { margin-bottom: 14px; }
-
-.field-label {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text2);
-  letter-spacing: 0.5px;
-  margin-bottom: 6px;
-  display: block;
-}
-
-.field-input {
-  width: 100%;
-  background: var(--surface2);
-  border: 1.5px solid var(--border2);
-  color: var(--text);
-  border-radius: var(--radius-sm);
-  padding: 12px 14px;
-  font-size: 14px;
-  font-family: inherit;
-  outline: none;
-  transition: border-color 0.2s, box-shadow 0.2s;
-  -webkit-appearance: none;
-}
-
-.field-input:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
-}
-
-.field-input::placeholder { color: var(--text3); }
-
-/* ===== BUTTONS ===== */
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  border: none;
-  cursor: pointer;
-  font-family: inherit;
-  font-weight: 600;
-  font-size: 13px;
-  border-radius: var(--radius-sm);
-  padding: 10px 18px;
-  transition: all 0.2s;
-  white-space: nowrap;
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
-}
-
-.btn:active { transform: scale(0.97); }
-
-.btn-primary {
-  background: linear-gradient(135deg, var(--accent), #2563eb);
-  color: #fff;
-  box-shadow: 0 4px 14px rgba(59,130,246,0.35);
-  width: 100%;
-  padding: 13px;
-  font-size: 15px;
-  border-radius: var(--radius-sm);
-}
-
-.btn-primary:hover { box-shadow: 0 6px 20px rgba(59,130,246,0.5); }
-
-.btn-ghost {
-  background: var(--surface2);
-  color: var(--text2);
-  border: 1px solid var(--border2);
-}
-
-.btn-ghost.active, .btn-ghost:hover {
-  background: var(--accent);
-  color: #fff;
-  border-color: var(--accent);
-  box-shadow: 0 4px 14px rgba(59,130,246,0.3);
-}
-
-.btn-sm { padding: 7px 14px; font-size: 12px; border-radius: 8px; }
-
-.btn-amber {
-  background: linear-gradient(135deg, var(--amber), #d97706);
-  color: #fff;
-  box-shadow: 0 4px 12px rgba(245,158,11,0.3);
-}
-
-.btn-green {
-  background: linear-gradient(135deg, var(--green), #059669);
-  color: #fff;
-  box-shadow: 0 4px 12px rgba(16,185,129,0.3);
-}
-
-.btn-red {
-  background: linear-gradient(135deg, var(--red), #dc2626);
-  color: #fff;
-  box-shadow: 0 4px 12px rgba(239,68,68,0.25);
-}
-
-/* ===== APP LAYOUT ===== */
-.app { position: relative; z-index: 1; }
-
-/* HEADER */
-.topbar {
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  background: rgba(7,11,20,0.85);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid var(--border);
-  padding: 12px 16px;
-}
-
-.topbar-inner {
-  max-width: 960px;
-  margin: 0 auto;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.topbar-logo {
-  width: 36px;
-  height: 36px;
-  background: linear-gradient(135deg, var(--accent), var(--accent2));
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 18px;
-  flex-shrink: 0;
-  box-shadow: 0 4px 12px rgba(59,130,246,0.3);
-}
-
-.topbar-text { flex: 1; min-width: 0; }
-
-.topbar-title {
-  font-size: 14px;
-  font-weight: 700;
-  line-height: 1.2;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.topbar-sub {
-  font-size: 10px;
-  color: var(--text2);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.role-badge {
-  font-size: 10px;
-  font-weight: 700;
-  padding: 4px 10px;
-  border-radius: 20px;
-  letter-spacing: 0.5px;
-  flex-shrink: 0;
-}
-
-.role-badge.admin { background: rgba(139,92,246,0.2); color: #a78bfa; border: 1px solid rgba(139,92,246,0.3); }
-.role-badge.user  { background: rgba(16,185,129,0.2); color: #6ee7b7; border: 1px solid rgba(16,185,129,0.3); }
-
-.logout-btn {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  background: rgba(239,68,68,0.1);
-  border: 1px solid rgba(239,68,68,0.2);
-  color: var(--red);
-  font-size: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  flex-shrink: 0;
-  transition: all 0.2s;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.logout-btn:hover { background: rgba(239,68,68,0.2); }
-
-/* BOTTOM NAV (mobile) */
-.bottom-nav {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  z-index: 100;
-  background: rgba(15,22,35,0.95);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-top: 1px solid var(--border);
-  display: flex;
-  padding: 8px 16px;
-  padding-bottom: max(8px, env(safe-area-inset-bottom));
-  gap: 4px;
-}
-
-.nav-item {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 3px;
-  padding: 8px 6px;
-  border-radius: 12px;
-  cursor: pointer;
-  border: none;
-  background: none;
-  color: var(--text3);
-  font-family: inherit;
-  font-size: 10px;
-  font-weight: 600;
-  transition: all 0.2s;
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
-}
-
-.nav-item .nav-icon { font-size: 20px; }
-.nav-item.active { background: rgba(59,130,246,0.15); color: var(--accent); }
-.nav-item:active { transform: scale(0.95); }
-
-/* CONTENT */
-.content {
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 16px 16px 100px;
-}
-
-/* Desktop: no bottom nav, use top tabs */
-@media (min-width: 768px) {
-  .bottom-nav { display: none; }
-  
-  .desktop-tabs {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 20px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 6px;
-  }
-
-  .desktop-tabs .btn-ghost {
-    flex: 1;
-    padding: 10px;
-  }
-
-  .content { padding-bottom: 24px; }
-}
 
-@media (max-width: 767px) {
-  .desktop-tabs { display: none; }
+body{
+background:#f3f6fb;
+font-family:'Segoe UI',Roboto,Arial;
+font-size:14px;
+color:#2c3e50;
 }
 
-/* HIDDEN */
-.hidden { display: none !important; }
-
-/* CARD */
-.card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 18px;
-  margin-bottom: 16px;
-  box-shadow: var(--shadow);
-}
-
-.card-header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 16px;
-}
-
-.card-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 18px;
-  flex-shrink: 0;
-}
-
-.card-icon.blue { background: rgba(59,130,246,0.15); }
-.card-icon.green { background: rgba(16,185,129,0.15); }
-.card-icon.amber { background: rgba(245,158,11,0.15); }
-.card-icon.purple { background: rgba(139,92,246,0.15); }
-
-.card-title {
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--text);
-}
-
-.card-sub {
-  font-size: 11px;
-  color: var(--text2);
-  margin-top: 2px;
-}
-
-/* FORM */
-.form-row { margin-bottom: 14px; }
-
-.form-row .field-label { margin-bottom: 6px; }
-
-textarea.field-input {
-  resize: vertical;
-  min-height: 90px;
-  line-height: 1.5;
-}
-
-/* STATS ROW */
-.stats-row {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-  margin-bottom: 16px;
-}
-
-.stat-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 14px 12px;
-  text-align: center;
-}
-
-.stat-val {
-  font-size: 26px;
-  font-weight: 800;
-  line-height: 1;
-  margin-bottom: 4px;
-  font-family: 'JetBrains Mono', monospace;
-}
-
-.stat-val.blue { color: var(--accent); }
-.stat-val.amber { color: var(--amber); }
-.stat-val.green { color: var(--green); }
-
-.stat-label { font-size: 10px; color: var(--text2); font-weight: 600; }
-
-/* TABLE WRAPPER */
-.table-wrap {
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  border-radius: 12px;
-  border: 1px solid var(--border);
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 13px;
-  min-width: 600px;
-}
-
-thead tr {
-  background: var(--surface2);
-  border-bottom: 1px solid var(--border2);
-}
-
-thead th {
-  padding: 12px 14px;
-  text-align: left;
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--text2);
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-
-tbody tr {
-  border-bottom: 1px solid var(--border);
-  transition: background 0.15s;
-}
-
-tbody tr:last-child { border-bottom: none; }
-tbody tr:hover { background: rgba(255,255,255,0.02); }
-
-tbody td {
-  padding: 12px 14px;
-  vertical-align: top;
-  color: var(--text);
-}
-
-/* STATUS BADGES */
-.badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 4px 10px;
-  border-radius: 20px;
-  font-size: 11px;
-  font-weight: 700;
-  white-space: nowrap;
-}
-
-.badge-new    { background: rgba(59,130,246,0.15); color: #93c5fd; border: 1px solid rgba(59,130,246,0.25); }
-.badge-proc   { background: rgba(245,158,11,0.15); color: #fcd34d; border: 1px solid rgba(245,158,11,0.25); }
-.badge-done   { background: rgba(16,185,129,0.15); color: #6ee7b7; border: 1px solid rgba(16,185,129,0.25); }
-
-/* MOBILE CARD VIEW (replaces table on small screens) */
-.order-list { display: flex; flex-direction: column; gap: 12px; }
-
-.order-card {
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 14px;
-  transition: border-color 0.2s;
-}
-
-.order-card:hover { border-color: var(--border2); }
-
-.order-card-top {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 10px;
-  margin-bottom: 10px;
-}
-
-.order-name {
-  font-weight: 700;
-  font-size: 14px;
-  line-height: 1.3;
-}
-
-.order-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-bottom: 10px;
-}
-
-.meta-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  background: var(--surface3);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 3px 8px;
-  font-size: 11px;
-  color: var(--text2);
-}
-
-.order-permohonan {
-  font-size: 12px;
-  color: var(--text2);
-  line-height: 1.5;
-  background: var(--surface);
-  border-radius: 10px;
-  padding: 8px 10px;
-  margin-bottom: 10px;
-  border-left: 3px solid var(--accent);
-}
-
-/* CHAT */
-.chat-container {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  overflow: hidden;
-  margin-bottom: 8px;
+.header-card{
+background:linear-gradient(135deg,#3b82f6,#1d4ed8);
+color:white;
+border-radius:18px;
+padding:18px;
+box-shadow:0 6px 20px rgba(0,0,0,.15);
 }
 
-.chat-messages {
-  max-height: 130px;
-  overflow-y: auto;
-  padding: 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+.card{
+border:none;
+border-radius:16px;
+box-shadow:0 4px 12px rgba(0,0,0,.08);
 }
 
-.chat-messages::-webkit-scrollbar { width: 4px; }
-.chat-messages::-webkit-scrollbar-track { background: transparent; }
-.chat-messages::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
-
-.chat-bubble {
-  max-width: 85%;
-  padding: 8px 12px;
-  border-radius: 12px;
-  font-size: 12px;
-  line-height: 1.4;
-}
-
-.chat-bubble.admin {
-  background: rgba(59,130,246,0.2);
-  border: 1px solid rgba(59,130,246,0.2);
-  align-self: flex-end;
-  border-bottom-right-radius: 4px;
-  color: #bfdbfe;
-}
-
-.chat-bubble.user {
-  background: rgba(16,185,129,0.15);
-  border: 1px solid rgba(16,185,129,0.2);
-  align-self: flex-start;
-  border-bottom-left-radius: 4px;
-  color: #a7f3d0;
-}
-
-.chat-time {
-  font-size: 10px;
-  opacity: 0.6;
-  margin-top: 3px;
-}
-
-.chat-input-row {
-  display: flex;
-  gap: 6px;
-  padding: 8px;
-  background: var(--surface2);
-  border-top: 1px solid var(--border);
+.hidden{
+display:none;
 }
 
-.chat-input {
-  flex: 1;
-  background: var(--surface);
-  border: 1px solid var(--border2);
-  color: var(--text);
-  border-radius: 8px;
-  padding: 8px 12px;
-  font-size: 13px;
-  font-family: inherit;
-  outline: none;
-  transition: border-color 0.2s;
+.table{
+font-size:13px;
 }
 
-.chat-input:focus { border-color: var(--accent); }
-.chat-input::placeholder { color: var(--text3); }
-
-.chat-send {
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
-  background: var(--accent);
-  color: #fff;
-  border: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 16px;
-  flex-shrink: 0;
-  transition: opacity 0.2s;
-}
-
-.chat-send:active { opacity: 0.8; }
-
-/* ACTION BUTTONS */
-.action-row {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-
-/* CHARTS */
-.chart-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 16px;
+.table thead{
+background:#f1f5f9;
+font-weight:600;
 }
 
-@media (min-width: 600px) {
-  .chart-grid { grid-template-columns: 1fr 1fr; }
+.table td{
+vertical-align:middle;
 }
 
-.chart-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 18px;
+.chat-box{
+max-height:140px;
+overflow-y:auto;
+background:#f8fafc;
+padding:8px;
+border-radius:10px;
+border:1px solid #e2e8f0;
 }
 
-.chart-title {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--text2);
-  margin-bottom: 14px;
-  letter-spacing: 0.3px;
+.chat-admin{
+background:#dbeafe;
+padding:6px 10px;
+border-radius:12px;
+margin:4px 0;
+text-align:right;
+font-size:13px;
 }
 
-/* SECTION TITLE */
-.section-title {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--text2);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: 12px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+.chat-user{
+background:#dcfce7;
+padding:6px 10px;
+border-radius:12px;
+margin:4px 0;
+text-align:left;
+font-size:13px;
 }
 
-.section-title::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: var(--border);
+.chat-time{
+font-size:10px;
+color:#64748b;
 }
 
-/* EMPTY STATE */
-.empty-state {
-  text-align: center;
-  padding: 40px 20px;
-  color: var(--text3);
+.btn{
+border-radius:10px;
+font-size:13px;
 }
-
-.empty-state .emoji { font-size: 36px; margin-bottom: 10px; }
-.empty-state p { font-size: 13px; }
 
-/* TOAST */
-.toast {
-  position: fixed;
-  bottom: 90px;
-  left: 50%;
-  transform: translateX(-50%) translateY(20px);
-  background: var(--green);
-  color: #fff;
-  padding: 10px 20px;
-  border-radius: 20px;
-  font-size: 13px;
-  font-weight: 600;
-  opacity: 0;
-  transition: all 0.3s;
-  z-index: 999;
-  white-space: nowrap;
-  box-shadow: 0 8px 24px rgba(16,185,129,0.4);
+.btn-warning{
+background:#f59e0b;
+border:none;
 }
 
-.toast.show {
-  opacity: 1;
-  transform: translateX(-50%) translateY(0);
+.btn-success{
+background:#10b981;
+border:none;
 }
 
-@media (min-width: 768px) {
-  .toast { bottom: 24px; }
+.btn-outline-primary{
+border-radius:10px;
 }
 
-/* PULSE DOT */
-.pulse-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--green);
-  animation: pulse 2s infinite;
-  display: inline-block;
+input,textarea{
+border-radius:10px !important;
 }
 
-@keyframes pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.5; transform: scale(0.8); }
+nav button{
+min-width:120px;
 }
 
-/* DIVIDER */
-.divider {
-  height: 1px;
-  background: var(--border);
-  margin: 16px 0;
+h6{
+font-weight:600;
+color:#334155;
 }
 
-/* MONO TEXT */
-.mono { font-family: 'JetBrains Mono', monospace; }
-
-/* SCROLLBAR GLOBAL */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 6px; }
-
-/* NUMBER BADGE */
-.count-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background: var(--accent);
-  color: #fff;
-  font-size: 10px;
-  font-weight: 700;
-}
 </style>
+
 </head>
 
-<body>
-<audio id="notifSound">
-  <source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg">
-</audio>
-<div id="toast" class="toast">✓ Tersimpan</div>
+<body class="p-3">
 
-<!-- ===== LOGIN ===== -->
-<div id="loginBox" class="login-wrap">
-  <div class="login-card">
-    <div class="login-logo">🩻</div>
-    <h1 class="login-title">Re-Expertise Radiologi</h1>
-    <p class="login-sub">RS Mitra Plumbon Cirebon<br>Sistem Monitoring v9</p>
-    <div class="field-group">
-      <label class="field-label">USERNAME</label>
-      <input id="username" class="field-input" placeholder="Masukkan username" autocomplete="off" autocapitalize="off">
-    </div>
-    <div class="field-group">
-      <label class="field-label">PASSWORD</label>
-      <input id="password" type="password" class="field-input" placeholder="Masukkan password">
-    </div>
-    <button class="btn btn-primary" onclick="login()">Masuk →</button>
-  </div>
+<audio id="notifSound">
+<source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg">
+</audio>
+
+
+<!-- LOGIN -->
+
+<div id="loginBox" class="card p-4 mx-auto mt-5" style="max-width:380px">
+
+<h5 class="text-center mb-3">Login Radiologi</h5>
+
+<input id="username" class="form-control mb-2" placeholder="Username">
+
+<input id="password" type="password" class="form-control mb-3" placeholder="Password">
+
+<button class="btn btn-primary w-100" onclick="login()">Login</button>
+
 </div>
 
-<!-- ===== APP ===== -->
-<div id="app" class="hidden app">
 
-  <!-- TOPBAR -->
-  <div class="topbar">
-    <div class="topbar-inner">
-      <div class="topbar-logo">🩻</div>
-      <div class="topbar-text">
-        <div class="topbar-title">Re-Expertise Radiologi</div>
-        <div class="topbar-sub">RS Mitra Plumbon • <span class="pulse-dot"></span> Live</div>
-      </div>
-      <span id="roleBadge" class="role-badge"></span>
-      <button class="logout-btn" onclick="logout()" title="Logout">⏻</button>
-    </div>
-  </div>
 
-  <!-- CONTENT -->
-  <div class="content">
+<div id="app" class="hidden">
 
-    <!-- DESKTOP TABS -->
-    <div class="desktop-tabs" id="desktopTabs">
-      <button class="btn btn-ghost active" onclick="openTool('form',this)">📝 Permohonan</button>
-      <button class="btn btn-ghost" onclick="openTool('monitor',this)">📋 Monitoring</button>
-      <button class="btn btn-ghost" onclick="openTool('dashboard',this)">📊 Dashboard</button>
-    </div>
+<div class="header-card mb-3">
 
-    <!-- FORM PERMOHONAN -->
-    <div id="form" class="hidden">
-      <div class="card">
-        <div class="card-header">
-          <div class="card-icon blue">📝</div>
-          <div>
-            <div class="card-title">Permohonan Re-Expertise</div>
-            <div class="card-sub">Isi data pasien dengan lengkap</div>
-          </div>
-        </div>
-        <div class="form-row">
-          <label class="field-label">NAMA PASIEN</label>
-          <input id="tNama" class="field-input" placeholder="Contoh: Budi Santoso">
-        </div>
-        <div class="form-row">
-          <label class="field-label">NOMOR REKAM MEDIS</label>
-          <input id="tRM" class="field-input" placeholder="Contoh: 00123456" class="mono">
-        </div>
-        <div class="form-row">
-          <label class="field-label">ASAL RANAP / UNIT</label>
-          <input id="tRanap" class="field-input" placeholder="Contoh: Bangsal Mawar">
-        </div>
-        <div class="form-row">
-          <label class="field-label">PERMINTAAN RE-EXPERTISE</label>
-          <textarea id="tPermohonan" class="field-input" placeholder="Deskripsikan permintaan re-expertise..."></textarea>
-        </div>
-        <button class="btn btn-primary" onclick="submit()" style="margin-top:4px">Kirim Permohonan →</button>
-      </div>
-    </div>
+<h5 class="mb-1">🩻 Re-Expertise Radiologi</h5>
 
-    <!-- MONITORING -->
-    <div id="monitor" class="hidden">
+<small>
+RS Mitra Plumbon Cirebon • Dashboard Monitoring v8 PRO
+</small>
 
-      <!-- STATS -->
-      <div class="stats-row" id="statsRow">
-        <div class="stat-card">
-          <div class="stat-val blue" id="statBaru">0</div>
-          <div class="stat-label">Order Baru</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-val amber" id="statProses">0</div>
-          <div class="stat-label">Diproses</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-val green" id="statSelesai">0</div>
-          <div class="stat-label">Selesai</div>
-        </div>
-      </div>
+</div>
 
-      <!-- ORDER BARU -->
-      <div class="section-title">Order Aktif</div>
-      <div id="orderBaru" class="order-list"></div>
 
-      <div class="divider"></div>
+<nav class="mb-3 d-flex gap-2">
 
-      <!-- ORDER SELESAI -->
-      <div class="section-title">Riwayat Selesai</div>
-      <div id="orderSelesai" class="order-list"></div>
+<button class="btn btn-outline-primary" onclick="openTool('form')">
+📝 Permohonan
+</button>
 
-    </div>
+<button class="btn btn-outline-primary" onclick="openTool('monitor')">
+📋 Monitoring
+</button>
 
-    <!-- DASHBOARD -->
-    <div id="dashboard" class="hidden">
-      <div class="chart-grid">
-        <div class="chart-card">
-          <div class="chart-title">📈 Grafik SLA (menit) — Proses hingga Selesai</div>
-          <canvas id="slaChart"></canvas>
-        </div>
-        <div class="chart-card">
-          <div class="chart-title">⏱️ Grafik Waktu Tunggu (menit) — Masuk hingga Diproses</div>
-          <canvas id="waitChart"></canvas>
-        </div>
-      </div>
-    </div>
+<button class="btn btn-outline-primary" onclick="openTool('dashboard')">
+📊 Dashboard
+</button>
 
-  </div><!-- /content -->
+<button class="btn btn-danger ms-auto" onclick="logout()">
+Logout
+</button>
 
-  <!-- BOTTOM NAV (mobile) -->
-  <div class="bottom-nav">
-    <button class="nav-item" id="nav-form" onclick="openTool('form',null,'nav-form')">
-      <span class="nav-icon">📝</span>
-      Permohonan
-    </button>
-    <button class="nav-item active" id="nav-monitor" onclick="openTool('monitor',null,'nav-monitor')">
-      <span class="nav-icon">📋</span>
-      Monitoring
-    </button>
-    <button class="nav-item" id="nav-dashboard" onclick="openTool('dashboard',null,'nav-dashboard')">
-      <span class="nav-icon">📊</span>
-      Dashboard
-    </button>
-  </div>
+</nav>
 
-</div><!-- /app -->
+
+
+<!-- FORM -->
+
+<div id="form" class="card p-4 hidden">
+
+<h6 class="mb-3">📝 Permohonan Re-Expertise</h6>
+
+<input id="tNama" class="form-control mb-2" placeholder="Nama Pasien">
+
+<input id="tRM" class="form-control mb-2" placeholder="No RM">
+
+<input id="tRanap" class="form-control mb-2" placeholder="Asal Ranap / Unit">
+
+<textarea id="tPermohonan" class="form-control mb-3" placeholder="Permintaan Re-Expertise"></textarea>
+
+<button class="btn btn-primary" onclick="submit()">Simpan</button>
+
+</div>
+
+
+
+<!-- MONITOR -->
+
+<div id="monitor" class="hidden">
+
+<div class="card p-3 mb-3">
+
+<h6>🛒 Order Baru Re-Expertise</h6>
+
+<table class="table table-bordered align-middle">
+
+<thead>
+<tr>
+<th>No</th>
+<th>Nama</th>
+<th>No RM</th>
+<th>Ranap</th>
+<th>Permintaan</th>
+<th>Chat</th>
+<th>Aksi</th>
+</tr>
+</thead>
+
+<tbody id="orderBaru"></tbody>
+
+</table>
+
+</div>
+
+
+<div class="card p-3">
+
+<h6>✅ Keranjang Order Selesai</h6>
+
+<table class="table table-bordered align-middle">
+
+<thead>
+<tr>
+<th>No</th>
+<th>Nama</th>
+<th>No RM</th>
+<th>Ranap</th>
+<th>Permintaan</th>
+<th>Waktu Selesai</th>
+</tr>
+</thead>
+
+<tbody id="orderSelesai"></tbody>
+
+</table>
+
+</div>
+
+</div>
+
+
+
+<!-- DASHBOARD -->
+
+<div id="dashboard" class="hidden">
+
+<div class="row">
+
+<div class="col-md-6 mb-3">
+<div class="card p-3">
+<h6>Grafik SLA (menit)</h6>
+<canvas id="slaChart"></canvas>
+</div>
+</div>
+
+<div class="col-md-6 mb-3">
+<div class="card p-3">
+<h6>Grafik Waktu Tunggu (menit)</h6>
+<canvas id="waitChart"></canvas>
+</div>
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+
 
 <script>
-const DB = "https://develop-re-expertise2026-default-rtdb.asia-southeast1.firebasedatabase.app";
-let ROLE = "";
-let isTyping = false;
-let slaChart, waitChart;
-let lastChatCount = {};
-let currentTab = 'monitor';
 
-// === LOGIN ===
-function login() {
-  const u = document.getElementById('username').value;
-  const p = document.getElementById('password').value;
-  if (u === "201708073" && p === "Papamama00") ROLE = "ADMIN";
-  else if (u === "USER" && p === "rsmp11") ROLE = "USER";
-  else return showToast("Login salah! Periksa kembali.", false);
-  localStorage.setItem("role", ROLE);
-  init();
+const DB="https://develop-re-expertise2026-default-rtdb.asia-southeast1.firebasedatabase.app";
+
+let ROLE=""
+let isTyping=false
+let slaChart
+let waitChart
+let lastChatCount={}
+
+
+/* LOGIN */
+
+function login(){
+
+if(username.value==="201708073" && password.value==="Papamama00")
+ROLE="ADMIN"
+
+else if(username.value==="USER" && password.value==="rsmp11")
+ROLE="USER"
+
+else return alert("Login salah")
+
+localStorage.setItem("role",ROLE)
+
+init()
+
 }
 
-// Enter key for login
-document.getElementById('password').addEventListener('keydown', e => {
-  if (e.key === 'Enter') login();
-});
+if(localStorage.getItem("role"))init()
 
-if (localStorage.getItem("role")) init();
 
-function init() {
-  ROLE = localStorage.getItem("role");
-  document.getElementById('loginBox').classList.add('hidden');
-  document.getElementById('app').classList.remove('hidden');
-  const badge = document.getElementById('roleBadge');
-  badge.textContent = ROLE === 'ADMIN' ? 'ADMIN' : 'USER';
-  badge.className = 'role-badge ' + (ROLE === 'ADMIN' ? 'admin' : 'user');
-  openTool('monitor', null, 'nav-monitor');
-  load();
+function init(){
+
+ROLE=localStorage.getItem("role")
+
+loginBox.classList.add("hidden")
+app.classList.remove("hidden")
+
+openTool("monitor")
+
+load()
+
 }
 
-function logout() {
-  localStorage.clear();
-  location.reload();
+function logout(){
+
+localStorage.clear()
+location.reload()
+
 }
 
-// === NAVIGATION ===
-let activeDesktopBtn = null;
+function openTool(id){
 
-function openTool(id, desktopBtn, navId) {
-  currentTab = id;
-  ['form','monitor','dashboard'].forEach(x => document.getElementById(x).classList.add('hidden'));
-  document.getElementById(id).classList.remove('hidden');
+['form','monitor','dashboard'].forEach(x=>document.getElementById(x).classList.add("hidden"))
+document.getElementById(id).classList.remove("hidden")
 
-  // Update bottom nav
-  ['nav-form','nav-monitor','nav-dashboard'].forEach(n => {
-    const el = document.getElementById(n);
-    if (el) el.classList.remove('active');
-  });
-  if (navId) {
-    const el = document.getElementById(navId);
-    if (el) el.classList.add('active');
-  }
-
-  // Update desktop tabs
-  document.querySelectorAll('.desktop-tabs .btn-ghost').forEach(b => b.classList.remove('active'));
-  if (desktopBtn) desktopBtn.classList.add('active');
 }
 
-// === SUBMIT ===
-function submit() {
-  const tNama = document.getElementById('tNama');
-  const tRM = document.getElementById('tRM');
-  const tRanap = document.getElementById('tRanap');
-  const tPermohonan = document.getElementById('tPermohonan');
-  if (!tNama.value || !tRM.value || !tRanap.value || !tPermohonan.value)
-    return showToast("Semua field wajib diisi!", false);
 
-  fetch(DB + "/permohonan.json", {
-    method: "POST",
-    body: JSON.stringify({
-      nama: tNama.value, rm: tRM.value,
-      ranap: tRanap.value, permohonan: tPermohonan.value,
-      status: "BARU", created: Date.now()
-    })
-  });
+/* SUBMIT */
 
-  tNama.value = tRM.value = tRanap.value = tPermohonan.value = "";
-  showToast("✓ Permohonan berhasil dikirim!");
-  openTool('monitor', null, 'nav-monitor');
+function submit(){
+
+if(!tNama.value||!tRM.value||!tRanap.value||!tPermohonan.value)
+return alert("Semua field wajib diisi")
+
+fetch(DB+"/permohonan.json",{
+
+method:"POST",
+
+body:JSON.stringify({
+
+nama:tNama.value,
+rm:tRM.value,
+ranap:tRanap.value,
+permohonan:tPermohonan.value,
+status:"BARU",
+created:Date.now()
+
+})
+
+})
+
+tNama.value=""
+tRM.value=""
+tRanap.value=""
+tPermohonan.value=""
+
+openTool("monitor")
+
 }
 
-// === LOAD ===
-function load() {
-  if (isTyping) { setTimeout(load, 3000); return; }
-  fetch(DB + "/permohonan.json")
-    .then(r => r.json())
-    .then(d => {
-      if (!d) { d = {}; }
-      renderMonitor(d);
-      renderCharts(d);
-    })
-    .catch(() => {})
-    .finally(() => setTimeout(load, 3000));
+
+/* LOAD */
+
+function load(){
+
+if(isTyping){setTimeout(load,3000);return}
+
+fetch(DB+"/permohonan.json")
+.then(r=>r.json())
+.then(d=>{
+
+let baru=""
+let selesai=""
+
+let n1=1
+let n2=1
+
+let sla=[]
+let wait=[]
+
+for(let k in d){
+
+let x=d[k]
+
+if(x.proses && x.selesai)
+sla.push((x.selesai-x.created)/60000)
+
+if(x.proses)
+wait.push((x.proses-x.created)/60000)
+
+let chats=Object.values(x.chat||{})
+
+if(ROLE==="ADMIN" && chats.length>(lastChatCount[k]||0)){
+document.getElementById("notifSound").play()
 }
 
-function renderMonitor(d) {
-  let baru = [], selesai = [];
-  let cBaru = 0, cProses = 0, cSelesai = 0;
+lastChatCount[k]=chats.length
 
-  for (let k in d) {
-    const x = d[k];
-    const chats = Object.values(x.chat || {});
+let chatHtml=chats.map(c=>`
 
-    if (ROLE === "ADMIN" && chats.length > (lastChatCount[k] || 0)) {
-      try { document.getElementById("notifSound").play(); } catch(e){}
-    }
-    lastChatCount[k] = chats.length;
+<div class="${c.role==='ADMIN'?'chat-admin':'chat-user'}">
+${c.text}
+<div class="chat-time">
+${new Date(c.time).toLocaleTimeString()}
+</div>
+</div>
 
-    if (x.status === "SELESAI") cSelesai++;
-    else if (x.status === "DIPROSES") cProses++;
-    else cBaru++;
+`).join("")
 
-    if (x.status === "BARU" || x.status === "DIPROSES") {
-      baru.push({ k, x, chats });
-    } else if (x.status === "SELESAI") {
-      selesai.push({ k, x, chats });
-    }
-  }
 
-  document.getElementById('statBaru').textContent = cBaru;
-  document.getElementById('statProses').textContent = cProses;
-  document.getElementById('statSelesai').textContent = cSelesai;
+if(x.status==="BARU" || x.status==="DIPROSES"){
 
-  // Render active orders
-  const baruEl = document.getElementById('orderBaru');
-  if (baru.length === 0) {
-    baruEl.innerHTML = `<div class="empty-state"><div class="emoji">🎉</div><p>Tidak ada order aktif</p></div>`;
-  } else {
-    baruEl.innerHTML = baru.map(({k, x, chats}) => orderCard(k, x, chats, false)).join('');
-  }
+baru+=`
 
-  // Render selesai
-  const selesaiEl = document.getElementById('orderSelesai');
-  if (selesai.length === 0) {
-    selesaiEl.innerHTML = `<div class="empty-state"><div class="emoji">📭</div><p>Belum ada order selesai</p></div>`;
-  } else {
-    selesaiEl.innerHTML = selesai.map(({k, x, chats}) => orderCard(k, x, chats, true)).join('');
-  }
+<tr>
+
+<td>${n1++}</td>
+<td>${x.nama||"-"}</td>
+<td>${x.rm||"-"}</td>
+<td>${x.ranap||"-"}</td>
+<td>${x.permohonan||"-"}</td>
+
+<td>
+
+<div class="chat-box">${chatHtml}</div>
+
+<input class="form-control form-control-sm mt-1"
+placeholder="Ketik pesan..."
+onfocus="isTyping=true"
+onblur="isTyping=false"
+onkeydown="if(event.key==='Enter')sendChat('${k}',this)">
+
+</td>
+
+<td>
+
+${ROLE==="ADMIN"?`
+
+<button class="btn btn-sm btn-warning mb-1"
+onclick="setStatus('${k}','DIPROSES')">Proses</button>
+
+<button class="btn btn-sm btn-success"
+onclick="setStatus('${k}','SELESAI')">Selesai</button>
+
+`:"-"}
+
+</td>
+
+</tr>
+
+`
+
 }
 
-function orderCard(k, x, chats, isDone) {
-  const statusBadge = x.status === "BARU"
-    ? '<span class="badge badge-new">🔵 Baru</span>'
-    : x.status === "DIPROSES"
-    ? '<span class="badge badge-proc">🟡 Diproses</span>'
-    : '<span class="badge badge-done">🟢 Selesai</span>';
+if(x.status==="SELESAI"){
 
-  const chatHtml = chats.map(c => `
-    <div class="chat-bubble ${c.role === 'ADMIN' ? 'admin' : 'user'}">
-      <b>${c.role === 'ADMIN' ? '👨‍⚕️ Admin' : '🧑 User'}</b>: ${c.text}
-      <div class="chat-time">${new Date(c.time).toLocaleTimeString('id-ID', {hour:'2-digit',minute:'2-digit'})}</div>
-    </div>
-  `).join('');
+selesai+=`
 
-  const actionBtns = ROLE === "ADMIN" && !isDone ? `
-    <div class="action-row" style="margin-top:10px">
-      ${x.status !== "DIPROSES" ? `<button class="btn btn-sm btn-amber" onclick="setStatus('${k}','DIPROSES')">⚙️ Proses</button>` : ''}
-      <button class="btn btn-sm btn-green" onclick="setStatus('${k}','SELESAI')">✅ Selesai</button>
-    </div>
-  ` : '';
+<tr>
 
-  const waktuSelesai = isDone && x.selesai
-    ? `<div class="meta-chip">✅ ${new Date(x.selesai).toLocaleString('id-ID',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</div>`
-    : '';
+<td>${n2++}</td>
+<td>${x.nama||"-"}</td>
+<td>${x.rm||"-"}</td>
+<td>${x.ranap||"-"}</td>
+<td>${x.permohonan||"-"}</td>
+<td>${new Date(x.selesai).toLocaleString()}</td>
 
-  return `
-    <div class="order-card">
-      <div class="order-card-top">
-        <div>
-          <div class="order-name">${x.nama || '-'}</div>
-        </div>
-        ${statusBadge}
-      </div>
-      <div class="order-meta">
-        <div class="meta-chip">🆔 <span class="mono">${x.rm || '-'}</span></div>
-        <div class="meta-chip">🏥 ${x.ranap || '-'}</div>
-        <div class="meta-chip">🕐 ${new Date(x.created).toLocaleString('id-ID',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</div>
-        ${waktuSelesai}
-      </div>
-      <div class="order-permohonan">${x.permohonan || '-'}</div>
-      ${!isDone ? `
-      <div class="chat-container">
-        <div class="chat-messages" id="chatbox-${k}">${chatHtml || '<div style="text-align:center;color:var(--text3);font-size:12px;padding:10px">Belum ada pesan</div>'}</div>
-        <div class="chat-input-row">
-          <input class="chat-input" id="chatinput-${k}" placeholder="Ketik pesan..."
-            onfocus="isTyping=true" onblur="isTyping=false"
-            onkeydown="if(event.key==='Enter')sendChat('${k}',this)">
-          <button class="chat-send" onclick="sendChatById('${k}')">➤</button>
-        </div>
-      </div>
-      ` : ''}
-      ${actionBtns}
-    </div>
-  `;
+</tr>
+
+`
+
 }
 
-// Auto-scroll chat to bottom
-function scrollChats() {
-  document.querySelectorAll('[id^="chatbox-"]').forEach(el => {
-    el.scrollTop = el.scrollHeight;
-  });
 }
 
-// === CHAT ===
-function sendChat(id, el) {
-  if (!el.value) return;
-  fetch(DB + "/permohonan/" + id + "/chat.json", {
-    method: "POST",
-    body: JSON.stringify({ text: el.value, role: ROLE, time: Date.now() })
-  });
-  el.value = "";
+orderBaru.innerHTML=baru
+orderSelesai.innerHTML=selesai
+
+renderCharts(sla,wait)
+
+})
+
+setTimeout(load,3000)
+
 }
 
-function sendChatById(id) {
-  const el = document.getElementById('chatinput-' + id);
-  if (el) sendChat(id, el);
+
+/* CHAT */
+
+function sendChat(id,el){
+
+if(!el.value)return
+
+fetch(DB+"/permohonan/"+id+"/chat.json",{
+
+method:"POST",
+
+body:JSON.stringify({
+
+text:el.value,
+role:ROLE,
+time:Date.now()
+
+})
+
+})
+
+el.value=""
+
 }
 
-// === STATUS ===
-function setStatus(id, s) {
-  let p = { status: s };
-  if (s === "DIPROSES") p.proses = Date.now();
-  if (s === "SELESAI") p.selesai = Date.now();
-  fetch(DB + "/permohonan/" + id + ".json", { method: "PATCH", body: JSON.stringify(p) });
-  showToast(s === "SELESAI" ? "✅ Order selesai!" : "⚙️ Order diproses!");
+
+/* STATUS */
+
+function setStatus(id,s){
+
+let p={status:s}
+
+if(s==="DIPROSES")p.proses=Date.now()
+if(s==="SELESAI")p.selesai=Date.now()
+
+fetch(DB+"/permohonan/"+id+".json",{
+
+method:"PATCH",
+
+body:JSON.stringify(p)
+
+})
+
 }
 
-// === CHARTS ===
-function renderCharts(d) {
-  let sla = [], wait = [];
-  for (let k in d) {
-    const x = d[k];
-    if (x.proses && x.selesai) sla.push(+((x.selesai - x.proses) / 60000).toFixed(1));
-    if (x.proses) wait.push(+((x.proses - x.created) / 60000).toFixed(1));
-  }
 
-  const chartOpts = {
-    responsive: true,
-    plugins: { legend: { display: false } },
-    scales: {
-      x: { ticks: { color: '#64748b', font: { size: 10 } }, grid: { color: 'rgba(255,255,255,0.04)' } },
-      y: { ticks: { color: '#64748b', font: { size: 10 } }, grid: { color: 'rgba(255,255,255,0.04)' } }
-    }
-  };
+/* CHART */
 
-  if (!slaChart) {
-    slaChart = new Chart(document.getElementById('slaChart'), {
-      type: 'bar',
-      data: {
-        labels: sla.map((_, i) => 'P' + (i + 1)),
-        datasets: [{
-          data: sla,
-          backgroundColor: 'rgba(59,130,246,0.5)',
-          borderColor: '#3b82f6',
-          borderWidth: 2,
-          borderRadius: 6
-        }]
-      },
-      options: chartOpts
-    });
-  } else {
-    slaChart.data.labels = sla.map((_, i) => 'P' + (i + 1));
-    slaChart.data.datasets[0].data = sla;
-    slaChart.update();
-  }
+function renderCharts(sla,wait){
 
-  if (!waitChart) {
-    waitChart = new Chart(document.getElementById('waitChart'), {
-      type: 'line',
-      data: {
-        labels: wait.map((_, i) => 'P' + (i + 1)),
-        datasets: [{
-          data: wait,
-          borderColor: '#06b6d4',
-          backgroundColor: 'rgba(6,182,212,0.1)',
-          tension: 0.4,
-          fill: true,
-          pointBackgroundColor: '#06b6d4',
-          pointRadius: 4
-        }]
-      },
-      options: chartOpts
-    });
-  } else {
-    waitChart.data.labels = wait.map((_, i) => 'P' + (i + 1));
-    waitChart.data.datasets[0].data = wait;
-    waitChart.update();
-  }
+if(!slaChart){
+
+slaChart=new Chart(
+
+document.getElementById("slaChart"),
+
+{
+type:'bar',
+data:{labels:sla.map((_,i)=>"Data "+(i+1)),datasets:[{data:sla}]},
+options:{plugins:{legend:{display:false}}}
+})
+
+}else{
+
+slaChart.data.datasets[0].data=sla
+slaChart.update()
+
 }
 
-// === TOAST ===
-function showToast(msg, success = true) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.style.background = success ? 'var(--green)' : 'var(--red)';
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2500);
+if(!waitChart){
+
+waitChart=new Chart(
+
+document.getElementById("waitChart"),
+
+{
+type:'line',
+data:{labels:wait.map((_,i)=>"Data "+(i+1)),datasets:[{data:wait,tension:.3}]},
+options:{plugins:{legend:{display:false}}}
+})
+
+}else{
+
+waitChart.data.datasets[0].data=wait
+waitChart.update()
+
 }
 
-// After each render, scroll chats
-const origRenderMonitor = renderMonitor;
+}
+
 </script>
+
 </body>
 </html>
